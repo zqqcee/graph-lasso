@@ -1,0 +1,9 @@
+{'guid': 'guid_table1', 'typeName': 'dli.Table', 'bussinessDomain': 'temp'}
+{'guid': 'guid_table2', 'typeName': 'dli.Table', 'bussinessDomain': 'temp'}
+{'guid': 'guid_table3', 'typeName': 'dli.Table', 'bussinessDomain': 'temp'}
+{'guid': 'guid_table4', 'typeName': 'dli.Table', 'bussinessDomain': 'temp'}
+{'guid': 'guid_sub_node', 'typeName': 'dlf.sub_node', 'bussinessDomain': 'temp'}
+{'guid': 'guid_column1', 'typeName': 'dli.Column', 'bussinessDomain': 'temp'}
+{'guid': 'guid_column2', 'typeName': 'dli.Column', 'bussinessDomain': 'temp'}
+{'guid': 'guid_column3', 'typeName': 'dli.Column', 'bussinessDomain': 'temp'}
+{'guid': 'guid_logic_entity', 'typeName': 'business.LogicEntity', 'bussinessDomain': 'temp'}
