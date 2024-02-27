@@ -52,6 +52,7 @@ const main = (res) => {
         .attr("cy", (d) => d.y);
         
       d3.selectAll(".edge")
+        .data(res.links)
         .attr("d", (d) => {
           return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
         });
@@ -97,15 +98,34 @@ const main = (res) => {
     
     const selectedNodesSet = new Set(selectedNodesData.map((n) => n.mgmt_ip));
     /**
-     * 保留删除连边的动画
+     * 此处是对原来svg视图中的渲染好的edge进行删除
      */
     const selectedRelatedEdges = edges.filter((e) => {
       const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
       const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
-      return sourceInSelection && targetInSelection;
+      return sourceInSelection || targetInSelection;
     });
     console.log(selectedRelatedEdges)
     selectedRelatedEdges.remove();
+    /**
+     * 这里是对res.link数据直接进行修改，再用d3渲染
+     */
+    const newlinks = res.links.filter((e) => {
+      const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
+      const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
+      return (sourceInSelection && !targetInSelection) || (targetInSelection && !sourceInSelection);
+    });
+    const removelinks = res.links.filter((e)=>{
+      const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
+      const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
+      return sourceInSelection || targetInSelection;
+    })
+    res.links = res.links.filter((e) => !removelinks.includes(e))
+    container.selectAll(".edge").data(res.links)
+      .attr("d", (d) => {
+        return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+      });
+      
     const uniqueId = uuid();
     const restNodes = res.nodes.filter((n) => !selectedNodesSet.has(n.mgmt_ip));
     const newNode = {
@@ -120,23 +140,32 @@ const main = (res) => {
       newNode,
     ];
     /**
-     * 先过滤得到一端为选中节点一端为未选中节点的边
-     * 再将这些边的端点改为新生成的节点
-     * 再重新放入res.links
-     * 最后根据id重新绘制
-     * 仍然存在被选中的点聚合不在新生成的点的位置，会发生偏移
+     * 给修改端点的边添加动画在加入到res.link中
+     * 再用d3进行渲染
      */
-    const newlinks = res.links.filter((e) => {
-      const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
-      const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
-      return (sourceInSelection && !targetInSelection) || (targetInSelection && !sourceInSelection);
-    });
-    res.links = res.links.filter((e) => !newlinks.includes(e));
     newlinks.forEach((e) => {
       if (selectedNodesSet.has(e.source.mgmt_ip)) {
-        e.source = newNode
+        d3.select(".edges_group")
+          .append("path")
+          .attr("class", "edge")
+          .attr("stroke", "#caadad")
+          .attr("stroke-width", 0.5)
+          .attr("d", `M ${e.source.x} ${e.source.y} L ${e.target.x} ${e.target.y}`)
+          .transition()
+          .duration(1000)
+          .attr("d", `M ${avgX} ${avgY} L ${e.target.x} ${e.target.y}`);
+          e.source = newNode
       }
       if (selectedNodesSet.has(e.target.mgmt_ip)) {
+        d3.select(".edges_group")
+          .append("path")
+          .attr("class", "edge")
+          .attr("stroke", "#caadad")
+          .attr("stroke-width", 0.5)
+          .attr("d", `M ${e.source.x} ${e.source.y} L ${e.target.x} ${e.target.y}`)
+          .transition()
+          .duration(1000)
+          .attr("d", `M ${e.source.x} ${e.source.y} L ${avgX} ${avgY}`);
         e.target = newNode
       }
     });
