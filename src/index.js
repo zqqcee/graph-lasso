@@ -50,12 +50,9 @@ const main = (res) => {
       d3.selectAll(".circle")
         .attr("cx", (d) => d.x)
         .attr("cy", (d) => d.y);
-        
-      d3.selectAll(".edge")
-        .data(res.links)
-        .attr("d", (d) => {
-          return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
-        });
+      container.selectAll(".edge").attr("d", (d) => {
+        return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+      });
       d3.selectAll(".new-circle")
         .attr("cx", (d) => d.x)
         .attr("cy", (d) => d.y);
@@ -93,39 +90,35 @@ const main = (res) => {
     // Style the selected dots
     const selectedNodesItem = lasso.selectedItems(); //选择的DOM
     const selectedNodesData = selectedNodesItem.data(); //选择的NodeData
-    const avgX = avg(selectedNodesData.map((d) => d.x))
-    const avgY = avg(selectedNodesData.map((d) => d.y))
-    
+    const avgX = avg(selectedNodesData.map((d) => d.x));
+    const avgY = avg(selectedNodesData.map((d) => d.y));
+
     const selectedNodesSet = new Set(selectedNodesData.map((n) => n.mgmt_ip));
     /**
-     * 此处是对原来svg视图中的渲染好的edge进行删除
+     * 保留删除连边的动画
      */
     const selectedRelatedEdges = edges.filter((e) => {
       const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
       const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
       return sourceInSelection || targetInSelection;
     });
-    console.log(selectedRelatedEdges)
-    selectedRelatedEdges.remove();
-    /**
-     * 这里是对res.link数据直接进行修改，再用d3渲染
-     */
+    selectedRelatedEdges.remove()
     const newlinks = res.links.filter((e) => {
+      //仅有一个端点在选择中连边其中的
       const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
       const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
-      return (sourceInSelection && !targetInSelection) || (targetInSelection && !sourceInSelection);
+      return (
+        (sourceInSelection && !targetInSelection) ||
+        (targetInSelection && !sourceInSelection)
+      );
     });
-    const removelinks = res.links.filter((e)=>{
+    const removelinks = res.links.filter((e) => {
       const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
       const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
-      return sourceInSelection || targetInSelection;
-    })
-    res.links = res.links.filter((e) => !removelinks.includes(e))
-    container.selectAll(".edge").data(res.links)
-      .attr("d", (d) => {
-        return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
-      });
-      
+      return sourceInSelection && targetInSelection;
+    });
+    res.links = res.links.filter((e) => !removelinks.includes(e));
+
     const uniqueId = uuid();
     const restNodes = res.nodes.filter((n) => !selectedNodesSet.has(n.mgmt_ip));
     const newNode = {
@@ -134,45 +127,28 @@ const main = (res) => {
       className: "new-circle",
       x: avgX,
       y: avgY,
-    }
-    const newNodes = [
-      ...restNodes,
-      newNode,
-    ];
-    /**
-     * 给修改端点的边添加动画在加入到res.link中
-     * 再用d3进行渲染
-     */
+    };
+    const newNodes = [...restNodes, newNode];
+    //res.links 端点先改成聚合点
     newlinks.forEach((e) => {
       if (selectedNodesSet.has(e.source.mgmt_ip)) {
-        d3.select(".edges_group")
-          .append("path")
-          .attr("class", "edge")
-          .attr("stroke", "#caadad")
-          .attr("stroke-width", 0.5)
-          .attr("d", `M ${e.source.x} ${e.source.y} L ${e.target.x} ${e.target.y}`)
-          .transition()
-          .duration(1000)
-          .attr("d", `M ${avgX} ${avgY} L ${e.target.x} ${e.target.y}`);
-          e.source = newNode
+        e.source = newNode;
       }
       if (selectedNodesSet.has(e.target.mgmt_ip)) {
-        d3.select(".edges_group")
-          .append("path")
-          .attr("class", "edge")
-          .attr("stroke", "#caadad")
-          .attr("stroke-width", 0.5)
-          .attr("d", `M ${e.source.x} ${e.source.y} L ${e.target.x} ${e.target.y}`)
-          .transition()
-          .duration(1000)
-          .attr("d", `M ${e.source.x} ${e.source.y} L ${avgX} ${avgY}`);
-        e.target = newNode
+        e.target = newNode;
       }
     });
     res.links = [...res.links, ...newlinks];
+
+    container
+      .selectAll(".edge")
+      .data(res.links)
+      .attr("d", (d) => {
+        return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+      });
     container
       .selectAll(".edges_group")
-      .data(res.links,d => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
+      .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
       .enter()
       .append("g")
       .attr("class", "edges_group")
@@ -183,52 +159,68 @@ const main = (res) => {
       .attr("d", (d) => {
         return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
       });
-    
+
     let newNodeCoordinates = []; // 用于存储新生成点的坐标
     /**
      * 主要设置生成新节点的动画以及被选中节点消失的动画过渡效果
      */
     container
-      .selectAll(".circle_group")
-      .data(newNodes, (d) => d.mgmt_ip)
-      .enter()
-      .append("circle")
-      .attr("class", "new-circle")
-      .attr("r", 3.5)
-      .attr("cx", avgX)
-      .attr("cy", avgY)
-      .attr("fill", "blue")
-      .style("opacity", 0) // 设置初始透明度为0
-      .transition()
-      .duration(1000) // 过渡动画持续时间为1秒
-      .style("opacity", 1) // 设置最终透明度为1)
-      .each(function(d) {
-        if (d.mgmt_ip === uniqueId) {
-          const cx = d3.select(this).attr("cx");
-          const cy = d3.select(this).attr("cy");
-          newNodeCoordinates.push({ x: cx, y: cy });
-        }
-      });
-    selectedNodesItem
-      .transition()
-      .duration(700)
-      .ease(d3.easeLinear)
-      .attr("cx", newNodeCoordinates[0].x)
-      .attr("cy", newNodeCoordinates[0].y)
-      .remove()
-      
-    if (selectedNodesSet.size) {
-        //TODO: 根据节点的数量来设置alpha的初始值
-        // 更新力导向图的节点和边
-        force.nodes(newNodes);
-        force.alpha(0.1);
-        setTimeout(function() {
-          force
-            .alphaTarget(0)
-            .restart();
-        }, 1700);
-        // console.log(force.on("tick"));
-      }
+  .selectAll(".circle_group")
+  .data(newNodes, (d) => d.mgmt_ip)
+  .enter()
+  .append("circle")
+  .attr("class", "new-circle")
+  .attr("r", 3.5)
+  .attr("cx", avgX)
+  .attr("cy", avgY)
+  .attr("fill", "blue")
+  .style("opacity", 0) // 设置初始透明度为0
+  .transition()
+  .duration(1000) // 过渡动画持续时间为1秒
+  .style("opacity", 1) // 设置最终透明度为1
+  .each(function (d) {
+    if (d.mgmt_ip === uniqueId) {
+      const cx = d3.select(this).attr("cx");
+      const cy = d3.select(this).attr("cy");
+      newNodeCoordinates.push({ x: cx, y: cy });
+    }
+  })
+  /**
+   * 此次修改将force.restart（）放在消失被选中动画的前面
+   */
+  // 更新力导向图的边
+  force.force("link").links(res.links);
+  force.alpha(0.5)
+
+  // 重新启动力导向图模拟
+  force.restart()
+
+  /**
+   * 在后面的end操作下，把注释取消会再次调整新节点的位置以及线的长度
+   * 保留则会出现连线变长的现象
+   */
+  selectedNodesItem
+    .transition()
+    .duration(1000) // 使持续时间与新节点出现的动画一致
+    .ease(d3.easeCubic) // 使用更平滑的过渡效果
+    .attr("cx", newNodeCoordinates[0].x)
+    .attr("cy", newNodeCoordinates[0].y)
+    .remove()
+    .on("end", function() {
+      // 动画完成后更新力导向图的节点和边
+      // force.nodes(newNodes).on("tick", () => {
+      //   d3.selectAll(".circle")
+      //     .attr("cx", (d) => d.x)
+      //     .attr("cy", (d) => d.y);
+      //   container.selectAll(".edge").attr("d", (d) => {
+      //     return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+      //   });
+      //   d3.selectAll(".new-circle")
+      //     .attr("cx", (d) => d.x)
+      //     .attr("cy", (d) => d.y);
+      // })
+      // force.restart()
+    });
   };
 
   lasso = d3
