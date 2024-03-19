@@ -1,4 +1,4 @@
 # 套索聚合
 
-![录屏2024-03-18 22.31.55](doc/录屏2024-03-18 22.31.55.gif)
+![](https://raw.githubusercontent.com/zqqcee/img_repo/main/img/202403191538917.gif)
 
