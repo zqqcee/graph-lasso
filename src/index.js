@@ -1,6 +1,7 @@
 import { v4 as uuid } from "uuid";
 import { rangeMapping } from "./utils";
 let lasso;
+let flag = true;
 const mergeNodes = (nodes, edges) => {};
 let velocityDecay = 0.7;
 document.querySelector("#strong").addEventListener("click", () => {
@@ -224,7 +225,9 @@ const main = (res) => {
       .attr("fill", "blue")
       .on("contextmenu", function (data) {
         d3.event.preventDefault();
-        console.log(res.nodes);
+        if (!flag) {
+          return;
+        }
         res.nodes = res.nodes.filter((n) => n.mgmt_ip !== data.mgmt_ip);
         d3.select(this).remove();
         // 使用d3选择并删除newlinks所绘制的边
@@ -260,7 +263,15 @@ const main = (res) => {
           .append("path")
           .attr("class", "edge")
           .attr("stroke", "#caadad")
-          .attr("stroke-width", 0.5);
+          .attr("stroke-width", 0.5)
+          .attr("d", (d) => {
+            return `M ${data.x} ${data.y} L ${data.x} ${data.y}`;
+          })
+          .transition()
+          .duration(500)
+          .attr("d", (d) => {
+            return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+          });
 
         // 处理节点的进入、更新、退出
         let nodeSelection = container
@@ -268,38 +279,32 @@ const main = (res) => {
           .data(res.nodes);
 
         // 将子节点重新添加到图中
+        // data.children.forEach((child) => {
+        //   child.x = data.x;
+        //   child.y = data.y;
+        // });
         res.nodes = [...res.nodes, ...data.children];
+
         let nodeEnter = nodeSelection
           .data(res.nodes, (d) => d.mgmt_ip)
           .enter()
           .append("g")
-          .attr("class", "circle_group");
-
-        nodeEnter
+          .attr("class", "circle_group")
           .append("circle")
           .attr("fill", "black")
           .attr("class", "circle")
           .attr("r", 3.5)
           .attr("cx", data.x)
-          .attr("cy", data.y);
-        // .transition();
-        // .duration(1000);
-        // .attr("cx", (d) => d.x)
-        // .attr("cy", (d) => d.y);
+          .attr("cy", data.y)
+          .transition()
+          .duration(500)
+          .attr("cx", (d) => d.x)
+          .attr("cy", (d) => d.y);
 
         force.nodes(res.nodes);
         force.force("link", d3.forceLink(res.links));
         force.force("collide", d3.forceCollide(5));
-        // force.alpha(
-        //   Number(
-        //     rangeMapping(selectedNodesData.length, res.nodes.length) / 20
-        //   ).toFixed(2) < 0.2
-        //     ? 0.4
-        //     : Number(
-        //         rangeMapping(selectedNodesData.length, res.nodes.length) / 20
-        //       ).toFixed(2)
-        // );
-        force.alpha(0.8);
+        force.velocityDecay(0.8);
         force.on("tick", () => {
           d3.selectAll(".circle")
             .attr("cx", (d) => d.x)
@@ -307,9 +312,17 @@ const main = (res) => {
           container.selectAll(".edge").attr("d", (d) => {
             return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
           });
+          d3.selectAll(".new-circle")
+            .attr("cx", (d) => d.x)
+            .attr("cy", (d) => d.y);
+          flag = false;
         });
-        force.velocityDecay(0.8);
-        force.restart();
+        force.on("end", function () {
+          flag = true;
+        });
+        setTimeout(function () {
+          force.alpha(0.8).restart();
+        }, 400);
         lasso = d3
           .lasso()
           .closePathSelect(true)
@@ -368,6 +381,10 @@ const main = (res) => {
         .attr("cy", (d) => d.y - ((d.y - tempy) / 260) * count);
 
       count += 5;
+      flag = false;
+    });
+    force.on("end", function () {
+      flag = true;
     });
     force.alpha(
       Number(
