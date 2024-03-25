@@ -1,0 +1,36 @@
+.new-circle {
+  fill-opacity: 1;
+  stroke: #b48b8b;
+  stroke-width: 1;
+  fill: #def3dd;
+}
+.lasso path {
+  stroke: rgb(80, 80, 80);
+  stroke-width: 2px;
+}
+
+.lasso .drawn {
+  fill-opacity: 0.05;
+}
+
+.lasso .loop_close {
+  fill: none;
+  stroke-dasharray: 4, 4;
+}
+
+.lasso .origin {
+  fill: #3399ff;
+  fill-opacity: 1;
+}
+
+.not_possible {
+  fill: rgb(200, 200, 200);
+}
+
+.possible {
+  fill: #ec888c;
+}
+
+/* .selected {
+  fill: steelblue;
+} */
