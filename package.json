@@ -8,21 +8,22 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
+    "@arco-design/web-react": "2.61.1",
+    "d3": "4",
+    "jotai": "^2.7.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "@arco-design/web-react": "2.61.1",
     "styled-components": "^6.1.8",
-    "uuid": "^9.0.1",
-    "d3": "4"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "d3-selection": "",
     "@rsbuild/core": "^0.5.2",
     "@rsbuild/plugin-react": "^0.5.2",
+    "@types/d3": "4.13.14",
     "@types/react": "^18.2.47",
     "@types/react-dom": "^18.2.18",
     "@types/uuid": "9.0.8",
-    "@types/d3": "4.13.14",
+    "d3-selection": "",
     "typescript": "^5.4.2"
   }
 }

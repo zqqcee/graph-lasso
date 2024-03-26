@@ -8,10 +8,7 @@ export default defineConfig({
   plugins: [pluginReact()],
   output: {
     externals: {
-      d3: "self.d3",
+      d3: "window.d3",
     },
-  },
-  dev: {
-    writeToDisk: true,
   },
 });

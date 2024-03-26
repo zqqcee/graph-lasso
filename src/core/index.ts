@@ -3,35 +3,16 @@ import { v4 as uuid } from "uuid";
 import { rangeMapping } from "../utils";
 import * as d3 from "d3";
 
-console.log(d3);
-
 let lasso: any;
 let flag = true;
 let velocityDecay = 0.7;
-// document.querySelector("#strong").addEventListener("click", () => {
-//   velocityDecay = 0.3;
-//   document
-//     .querySelectorAll("button")
-//     .forEach((d) => (d.style.background = "#fff"));
-//   document.querySelector("#strong").style.background = "#e1ffc2";
-// });
-// document.querySelector("#mid").addEventListener("click", () => {
-//   velocityDecay = 0.7;
-//   document
-//     .querySelectorAll("button")
-//     .forEach((d) => (d.style.background = "#fff"));
-//   document.querySelector("#mid").style.background = "#e1ffc2";
-// });
-// document.querySelector("#weak").addEventListener("click", () => {
-//   velocityDecay = 0.99;
-//   document
-//     .querySelectorAll("button")
-//     .forEach((d) => (d.style.background = "#fff"));
-//   document.querySelector("#weak").style.background = "#e1ffc2";
-// });
+
 const avg = (arr: any[]) =>
   Math.floor(arr.reduce((p, c) => p + c) / arr.length);
-export const main = (res: { nodes: any[]; links: any[] }) => {
+export const main = (
+  res: { nodes: any[]; links: any[] },
+  lassoFlag: boolean
+) => {
   const svg = d3.select("#viewport").attr("height", 1000).attr("width", 1000);
   const container = svg.append("g").attr("id", "container");
   let edges = container
@@ -332,7 +313,6 @@ export const main = (res: { nodes: any[]; links: any[] }) => {
           .on("start", lasso_start)
           .on("draw", lasso_draw)
           .on("end", lasso_end);
-
         svg.call(lasso);
         svg.call(zoom);
       })
