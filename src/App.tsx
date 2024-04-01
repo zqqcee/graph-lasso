@@ -2,8 +2,9 @@ import Canvas from "./components/Canvas";
 import data from "../data/network/demo.json";
 import { Layout } from "@arco-design/web-react";
 import Title from "./components/Title";
+import Operation from "./components/Operation";
 import { Button, Space } from "@arco-design/web-react";
-import { lassoAtom } from "./store";
+import { lassoAtom, velocityDecayAtom } from "./store";
 import { useAtom } from "jotai";
 
 const Sider = Layout.Sider;
@@ -13,6 +14,7 @@ const Content = Layout.Content;
 
 function App() {
   const [lassoFlag, setLassoFlag] = useAtom(lassoAtom);
+  const [velocityDecay] = useAtom(velocityDecayAtom);
   return (
     <Layout style={{ height: "400px" }}>
       <Header>
@@ -20,17 +22,14 @@ function App() {
       </Header>
       <Layout>
         <Content>
-          <Canvas res={data} lassoFlag={lassoFlag} />
+          <Canvas
+            res={data}
+            lassoFlag={lassoFlag}
+            velocityDecay={1 - velocityDecay}
+          />
         </Content>
-        <Sider>
-          <Button
-            onClick={() => {
-              setLassoFlag((prev) => !prev);
-            }}
-            type="primary"
-          >
-            lasso
-          </Button>
+        <Sider width={"30%"}>
+          <Operation />
         </Sider>
       </Layout>
       <Footer>Footer</Footer>

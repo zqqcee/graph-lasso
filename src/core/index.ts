@@ -1,18 +1,18 @@
+// @ts-nocheck
+
 import { v4 as uuid } from "uuid";
-// @ts-ignore
 import { rangeMapping } from "../utils";
 import * as d3 from "d3";
 
 let lasso: any;
 let flag = true;
-let velocityDecay = 0.7;
+// let velocityDecay = 0.7;
+let forceStore;
 
 const avg = (arr: any[]) =>
   Math.floor(arr.reduce((p, c) => p + c) / arr.length);
-export const main = (
-  res: { nodes: any[]; links: any[] },
-  lassoFlag: boolean
-) => {
+
+const init = (res) => {
   const svg = d3.select("#viewport").attr("height", 1000).attr("width", 1000);
   const container = svg.append("g").attr("id", "container");
   let edges = container
@@ -67,9 +67,25 @@ export const main = (
         .attr("cx", (d) => d.x)
         .attr("cy", (d) => d.y);
     });
-
+  return force;
+};
+export const main = (
+  res: { nodes: any[]; links: any[] },
+  lassoFlag: boolean,
+  isInit: boolean,
+  velocityDecay: number
+) => {
+  console.log(velocityDecay);
+  let force;
+  if (isInit) {
+    force = init(res);
+    forceStore = force;
+  } else {
+    force = forceStore;
+  }
   let zoom = d3.zoom().scaleExtent([0.5, 5]).on("zoom", zoomed);
 
+  const container = d3.select("#container");
   function zoomed() {
     let currentTransform = d3.event.transform;
     container.attr("transform", currentTransform);
@@ -102,7 +118,7 @@ export const main = (
     const selectedNodesData = selectedNodesItem.data(); //选择的NodeData
     const avgX = avg(selectedNodesData.map((d) => d.x));
     const avgY = avg(selectedNodesData.map((d) => d.y));
-    edges = container
+    let edges = container
       .selectAll(".edges_group")
       .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip);
 
@@ -214,6 +230,7 @@ export const main = (
         if (!flag) {
           return;
         }
+        const svg = d3.select("#viewport");
         res.nodes = res.nodes.filter((n) => n.mgmt_ip !== data.mgmt_ip);
         d3.select(this).remove();
         // 使用d3选择并删除newlinks所绘制的边
@@ -380,19 +397,18 @@ export const main = (
     force.restart();
   };
 
-  console.log(d3);
   lasso = d3
     .lasso()
     .closePathSelect(true)
     .closePathDistance(100)
-    .items(circles)
-    .targetArea(svg)
+    .items(d3.selectAll("circle"))
+    .targetArea(d3.select("#viewport"))
     .on("start", lasso_start)
     .on("draw", lasso_draw)
     .on("end", lasso_end);
 
-  svg.call(lasso);
-  svg.call(zoom);
+  d3.select("#viewport").call(lasso);
+  d3.select("#viewport").call(zoom);
 };
 
 // (async () => {

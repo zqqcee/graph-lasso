@@ -34,3 +34,7 @@
 /* .selected {
   fill: steelblue;
 } */
+
+.origin {
+  display: none;
+}
