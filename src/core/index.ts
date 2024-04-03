@@ -54,8 +54,8 @@ const init = (res) => {
     )
     .force("charge", d3.forceManyBody())
     .force("center", d3.forceCenter(500, 500))
-    .force("y", d3.forceY(0))
-    .force("x", d3.forceX(0))
+    .force("y", d3.forceY(500))
+    .force("x", d3.forceX(500))
     .on("tick", () => {
       d3.selectAll(".circle")
         .attr("cx", (d) => d.x)
@@ -67,15 +67,16 @@ const init = (res) => {
         .attr("cx", (d) => d.x)
         .attr("cy", (d) => d.y);
     });
+
   return force;
 };
+
 export const main = (
   res: { nodes: any[]; links: any[] },
   lassoFlag: boolean,
   isInit: boolean,
   velocityDecay: number
 ) => {
-  console.log(velocityDecay);
   let force;
   if (isInit) {
     force = init(res);
@@ -132,6 +133,7 @@ export const main = (
       const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
       return sourceInSelection && targetInSelection;
     });
+    //需要删除的连边，后续需要复原
     const store_selectedRelatedEdges = selectedRelatedEdges.data();
     res.links = res.links.filter((e) => {
       return !store_selectedRelatedEdges.includes(e);
@@ -141,6 +143,12 @@ export const main = (
       //仅有一个端点在选择中连边其中的
       const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
       const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
+      //标记哪边的端点在集合中
+      if (sourceInSelection) {
+        e.source.selected = true;
+      } else if (targetInSelection) {
+        e.target.selected = true;
+      }
       return (
         (sourceInSelection && !targetInSelection) ||
         (targetInSelection && !sourceInSelection)
@@ -170,13 +178,12 @@ export const main = (
     const restNodes = res.nodes.filter((n) => !selectedNodesSet.has(n.mgmt_ip));
 
     // 将selectedNewLinks数据中的起点和终点保存在一个数组中
-
+    //修改端点为聚合点的连边
     const store_newlinks = selectedNewLinks.data().map((link) => {
-      const source = link.source;
-      const target = link.target;
+      const { source, target } = link;
       return {
-        source: source,
-        target: target,
+        source,
+        target,
       };
     });
     const uniqueId = uuid();
@@ -187,14 +194,17 @@ export const main = (
       x: avgX,
       y: avgY,
       children: selectedNodesData,
-      childrenlinks: [...store_newlinks],
+      childrenStorelinks: [...store_newlinks],
+      childrenRemovelinks: [...store_selectedRelatedEdges],
+      newLinks: [...newlinks],
     };
 
     res.nodes = [...restNodes, newNode];
+    //先把这些links从中删掉
     res.links = res.links.filter((e) => {
       return !newlinks.includes(e);
     });
-    //res.links 端点先改成聚合点
+    //添加links，改为聚合点
     newlinks.forEach((e) => {
       if (selectedNodesSet.has(e.source.mgmt_ip)) {
         e.source = newNode;
@@ -227,14 +237,25 @@ export const main = (
       .attr("fill", "blue")
       .on("contextmenu", function (data) {
         d3.event.preventDefault();
-        if (!flag) {
-          return;
-        }
+        // if (!flag) {
+        //   return;
+        // }
         const svg = d3.select("#viewport");
         res.nodes = res.nodes.filter((n) => n.mgmt_ip !== data.mgmt_ip);
         d3.select(this).remove();
+        // 处理节点的进入、更新、退出
+        let nodeSelection = container
+          .selectAll(".circle_group")
+          .data(res.nodes);
+
+        console.log(data.children.map((d) => ({ ...d, x: data.x, y: data.y })));
+        res.nodes = [
+          ...res.nodes,
+          ...data.children.map((d) => ({ ...d, x: data.x, y: data.y })),
+        ];
+
         // 使用d3选择并删除newlinks所绘制的边
-        newlinks.forEach((link) => {
+        data.newLinks.forEach((link) => {
           container
             .selectAll(".edges_group")
             .filter((d) => d === link)
@@ -242,19 +263,46 @@ export const main = (
         });
         res.links = [
           ...res.links.filter((e) => {
-            return !newlinks.includes(e);
+            return !data.newLinks.includes(e);
           }),
         ];
-        edges = container
-          .selectAll(".edges_group")
-          .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
-          .exit()
-          .remove();
+
+        //store_selectedRelatedEdges: 之前被删除的连边
         res.links = [
           ...res.links,
-          ...store_selectedRelatedEdges,
-          ...store_newlinks,
+          ...data.childrenStorelinks?.map((d) => {
+            const source = res.nodes.find(
+              (n) => n.mgmt_ip === d.source.mgmt_ip
+            );
+            const target = res.nodes.find(
+              (n) => n.mgmt_ip === d.target.mgmt_ip
+            );
+            // source.x = data.x;
+            // source.y = data.y;
+            // target.x = data.x;
+            // target.y = data.y;
+            return { ...d, source, target };
+          }),
+          ...data.childrenRemovelinks?.map((d) => {
+            const source = res.nodes.find(
+              (n) => n.mgmt_ip === d.source.mgmt_ip
+            );
+            const target = res.nodes.find(
+              (n) => n.mgmt_ip === d.target.mgmt_ip
+            );
+            source.x = data.x;
+            source.y = data.y;
+            target.x = data.x;
+            target.y = data.y;
+            return { ...d, source, target };
+          }),
         ];
+
+        let edges = container
+          .selectAll(".edges_group")
+          .data(res.links)
+          .exit()
+          .remove();
 
         // 处理边线的进入、更新、退出
         edges = container
@@ -269,19 +317,12 @@ export const main = (
           .attr("stroke-width", 0.5)
           .attr("d", (d) => {
             return `M ${data.x} ${data.y} L ${data.x} ${data.y}`;
-          })
-          .transition()
-          .duration(500)
-          .attr("d", (d) => {
-            return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
           });
-
-        // 处理节点的进入、更新、退出
-        let nodeSelection = container
-          .selectAll(".circle_group")
-          .data(res.nodes);
-
-        res.nodes = [...res.nodes, ...data.children];
+        // .transition()
+        // .duration(500)
+        // .attr("d", (d) => {
+        //   return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+        // });
 
         let nodeEnter = nodeSelection
           .data(res.nodes, (d) => d.mgmt_ip)
@@ -293,16 +334,16 @@ export const main = (
           .attr("class", "circle")
           .attr("r", 3.5)
           .attr("cx", data.x)
-          .attr("cy", data.y)
-          .transition()
-          .duration(500)
-          .attr("cx", (d) => d.x)
-          .attr("cy", (d) => d.y);
+          .attr("cy", data.y);
+        // .transition()
+        // .duration(500)
+        // .attr("cx", (d) => d.x)
+        // .attr("cy", (d) => d.y);
 
         force.nodes(res.nodes);
         force.force("link", d3.forceLink(res.links));
-        force.force("collide", d3.forceCollide(5));
-        force.velocityDecay(0.8);
+        force.force("collide", null);
+        console.log(res.nodes);
         force.on("tick", () => {
           d3.selectAll(".circle")
             .attr("cx", (d) => d.x)
@@ -314,13 +355,14 @@ export const main = (
             .attr("cx", (d) => d.x)
             .attr("cy", (d) => d.y);
           flag = false;
+          // force.stop();
         });
         force.on("end", function () {
           flag = true;
         });
-        setTimeout(function () {
-          force.alpha(0.8).restart();
-        }, 400);
+        force.velocityDecay(0.8);
+        // force.alphaDecay(0.3);
+        force.alpha(0.8).restart();
         lasso = d3
           .lasso()
           .closePathSelect(true)
@@ -406,9 +448,14 @@ export const main = (
     .on("start", lasso_start)
     .on("draw", lasso_draw)
     .on("end", lasso_end);
-
-  d3.select("#viewport").call(lasso);
-  d3.select("#viewport").call(zoom);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "f") {
+      d3.select("#viewport").call(lasso);
+    }
+    if (e.key === "d") {
+      d3.select("#viewport").call(zoom);
+    }
+  });
 };
 
 // (async () => {
