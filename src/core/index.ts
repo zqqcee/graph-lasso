@@ -277,10 +277,15 @@ export const main = (
             const target = res.nodes.find(
               (n) => n.mgmt_ip === d.target.mgmt_ip
             );
-            source.x = data.x;
-            source.y = data.y;
-            target.x = data.x;
-            target.y = data.y;
+            if (source.selected) {
+              source.x = data.x;
+              source.y = data.y;
+            }
+            if (target.selected) {
+              target.x = data.x;
+              target.y = data.y;
+            }
+
             return { ...d, source, target };
           }),
           ...data.childrenRemovelinks?.map((d) => {
@@ -360,8 +365,8 @@ export const main = (
         force.on("end", function () {
           flag = true;
         });
-        force.velocityDecay(0.8);
-        // force.alphaDecay(0.3);
+        force.velocityDecay(0.97);
+        force.alphaDecay(0.01);
         force.alpha(0.8).restart();
         lasso = d3
           .lasso()
