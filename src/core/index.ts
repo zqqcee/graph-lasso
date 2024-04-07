@@ -9,6 +9,8 @@ let flag = true;
 // let velocityDecay = 0.7;
 let forceStore;
 
+const getValidateId = (id: string) =>
+  `id_${id.replaceAll("-", "").replaceAll(".", "")}`;
 const avg = (arr: any[]) =>
   Math.floor(arr.reduce((p, c) => p + c) / arr.length);
 
@@ -24,7 +26,8 @@ const init = (res) => {
     .append("path")
     .attr("class", "edge")
     .attr("stroke", "#caadad")
-    .attr("stroke-width", 0.5);
+    .attr("stroke-width", 0.5)
+    .on("click", (d) => console.log(d));
   const circles = container
     .selectAll(".circle_group")
     .data(res.nodes, (d) => d.mgmt_ip)
@@ -72,12 +75,31 @@ const init = (res) => {
 };
 
 export const main = (
-  res: { nodes: any[]; links: any[] },
+  data: { nodes: any[]; links: any[] },
   lassoFlag: boolean,
   isInit: boolean,
   velocityDecay: number
 ) => {
   let force;
+  let res = data;
+  //expdata,筛选出与exp相关的节点
+
+  // const expIp = "125.217.47.42";
+
+  // res.links = res.links.filter((d) => {
+  //   return d.source === expIp || d.target === expIp;
+  // });
+  // const nodeset = new Set();
+  // nodeset.add(expIp);
+  // res.links.forEach((e) => {
+  //   nodeset.add(e.source);
+  //   nodeset.add(e.target);
+  // });
+  // res.nodes = res.nodes.filter((d) => nodeset.has(d.mgmt_ip));
+
+  //添加id
+  res.links = res.links.map((l, id) => ({ ...l, id }));
+
   if (isInit) {
     force = init(res);
     forceStore = force;
@@ -124,38 +146,41 @@ export const main = (
       .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip);
 
     const selectedNodesSet = new Set(selectedNodesData.map((n) => n.mgmt_ip));
+    const uniqueId = uuid();
 
     /**
      * 保留删除连边的动画
      */
-    const selectedRelatedEdges = edges.filter((e) => {
+    const needToDelEdges = edges.filter((e) => {
       const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
       const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
       return sourceInSelection && targetInSelection;
     });
     //需要删除的连边，后续需要复原
-    const store_selectedRelatedEdges = selectedRelatedEdges.data();
-    res.links = res.links.filter((e) => {
-      return !store_selectedRelatedEdges.includes(e);
-    });
-    selectedRelatedEdges.remove();
-    const selectedNewLinks = edges.filter((e) => {
-      //仅有一个端点在选择中连边其中的
-      const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
-      const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
-      //标记哪边的端点在集合中
-      if (sourceInSelection) {
-        e.source.selected = true;
-      } else if (targetInSelection) {
-        e.target.selected = true;
-      }
-      return (
-        (sourceInSelection && !targetInSelection) ||
-        (targetInSelection && !sourceInSelection)
-      );
-    });
+    const needToDelEdgesData = needToDelEdges.data();
+    const needToDelEdgesDataIds = needToDelEdgesData.map((d) => d.id);
+    res.links = res.links.filter((e) => !needToDelEdgesDataIds.includes(e.id));
+    needToDelEdges.remove();
 
-    selectedNewLinks
+    const needToEditEdges = edges
+      .filter((e) => {
+        //仅有一个端点在选择中连边其中的
+        const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
+        const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
+        //标记哪边的端点在集合中
+        if (sourceInSelection) {
+          e.source.selected = true;
+        } else if (targetInSelection) {
+          e.target.selected = true;
+        }
+        return (
+          (sourceInSelection && !targetInSelection) ||
+          (targetInSelection && !sourceInSelection)
+        );
+      })
+      .attr("id", getValidateId(uniqueId));
+
+    needToEditEdges
       .transition()
       .duration(1000)
       .attr("d", (d) => {
@@ -165,28 +190,21 @@ export const main = (
           return `M ${d.source.x} ${d.source.y} L ${avgX} ${avgY}`;
         }
       });
+    const needToEditEdgesData = needToEditEdges.data();
+    const needToEditEdgesDataIds = needToEditEdgesData.map((d) => d.id);
 
-    const newlinks = edges.data().filter((e) => {
-      //仅有一个端点在选择中连边其中的
-      const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
-      const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
-      return (
-        (sourceInSelection && !targetInSelection) ||
-        (targetInSelection && !sourceInSelection)
-      );
-    });
     const restNodes = res.nodes.filter((n) => !selectedNodesSet.has(n.mgmt_ip));
 
     // 将selectedNewLinks数据中的起点和终点保存在一个数组中
-    //修改端点为聚合点的连边
-    const store_newlinks = selectedNewLinks.data().map((link) => {
-      const { source, target } = link;
+    //缓存连边关系
+    const store_newlinks = needToEditEdgesData.map((link) => {
+      const { source, target, id } = link;
       return {
         source,
         target,
+        id,
       };
     });
-    const uniqueId = uuid();
     const newNode = {
       mgmt_ip: uniqueId,
       fill: "red",
@@ -194,18 +212,18 @@ export const main = (
       x: avgX,
       y: avgY,
       children: selectedNodesData,
-      childrenStorelinks: [...store_newlinks],
-      childrenRemovelinks: [...store_selectedRelatedEdges],
-      newLinks: [...newlinks],
+      childrenStorelinks: [...store_newlinks], // 聚合前的连边关系
+      childrenRemovelinks: [...needToDelEdgesData], // 聚合后删除的连边，需要复原
+      childrenEditlinks: [...needToEditEdgesData],
     };
 
     res.nodes = [...restNodes, newNode];
     //先把这些links从中删掉
     res.links = res.links.filter((e) => {
-      return !newlinks.includes(e);
+      return !needToEditEdgesDataIds.includes(e.id);
     });
     //添加links，改为聚合点
-    newlinks.forEach((e) => {
+    needToEditEdgesData.forEach((e) => {
       if (selectedNodesSet.has(e.source.mgmt_ip)) {
         e.source = newNode;
       }
@@ -213,7 +231,7 @@ export const main = (
         e.target = newNode;
       }
     });
-    res.links = [...res.links, ...newlinks];
+    res.links = [...res.links, ...needToEditEdgesData];
 
     let newNodeCoordinates = []; // 用于存储新生成点的坐标
     /**
@@ -233,6 +251,7 @@ export const main = (
       .attr("cy", avgY)
       .attr("fill", "blue")
       .on("contextmenu", function (data) {
+        console.log(data);
         d3.event.preventDefault();
         // if (!flag) {
         //   return;
@@ -248,22 +267,23 @@ export const main = (
         res.nodes = [
           ...res.nodes,
           ...data.children.map((d) => ({ ...d, x: data.x, y: data.y })),
-        ];
+        ].filter((d) => d.mgmt_ip !== data.mgmt_ip);
 
-        // 使用d3选择并删除newlinks所绘制的边
-        data.newLinks.forEach((link) => {
-          container
-            .selectAll(".edges_group")
-            .filter((d) => d === link)
-            .remove();
+        // 删除Editlinks所绘制的边
+        // data.childrenEditlinks.forEach((link) => {
+        //   container
+        //     .selectAll(".edges_group")
+        //     .filter((d) => {
+        //       return d === link;
+        //     })
+        //     .remove();
+        // });
+        console.log(getValidateId(data.mgmt_ip));
+        d3.selectAll(`#${getValidateId(data.mgmt_ip)}`).remove();
+        res.links = res.links.filter((e) => {
+          return !data.childrenEditlinks.includes(e);
         });
-        res.links = [
-          ...res.links.filter((e) => {
-            return !data.newLinks.includes(e);
-          }),
-        ];
 
-        //store_selectedRelatedEdges: 之前被删除的连边
         res.links = [
           ...res.links,
           ...data.childrenStorelinks?.map((d) => {
@@ -273,6 +293,7 @@ export const main = (
             const target = res.nodes.find(
               (n) => n.mgmt_ip === d.target.mgmt_ip
             );
+
             if (source.selected) {
               source.x = data.x;
               source.y = data.y;
@@ -306,18 +327,23 @@ export const main = (
           .remove();
 
         // 处理边线的进入、更新、退出
-        edges = container
+        container
           .selectAll(".edges_group")
-          .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
+          .data(res.links)
+          // .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
           .enter()
           .append("g")
           .attr("class", "edges_group")
+          .attr("id", (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
           .append("path")
           .attr("class", "edge")
           .attr("stroke", "#caadad")
           .attr("stroke-width", 0.5)
           .attr("d", (d) => {
             return `M ${data.x} ${data.y} L ${data.x} ${data.y}`;
+          })
+          .on("click", (d) => {
+            console.log(d);
           });
         // .transition()
         // .duration(500)
@@ -335,7 +361,8 @@ export const main = (
           .attr("class", "circle")
           .attr("r", 3.5)
           .attr("cx", data.x)
-          .attr("cy", data.y);
+          .attr("cy", data.y)
+          .on("click", (d) => console.log(d));
         // .transition()
         // .duration(500)
         // .attr("cx", (d) => d.x)
