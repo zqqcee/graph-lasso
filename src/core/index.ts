@@ -52,7 +52,7 @@ const init = (res) => {
         return 8;
       })
     )
-    .force("charge", d3.forceManyBody())
+    .force("charge", d3.forceManyBody().strength(-40))
     .force("center", d3.forceCenter(500, 500))
     .force("y", d3.forceY(500))
     .force("x", d3.forceX(500))
@@ -227,10 +227,7 @@ export const main = (
       .attr("class", "circle_group")
       .append("circle")
       .attr("class", "new-circle")
-      .attr("id", function (d) {
-        console.log("新生成的节点", d);
-        return uniqueId;
-      })
+      .attr("id", (d) => uniqueId)
       .attr("r", 3.5)
       .attr("cx", avgX)
       .attr("cy", avgY)
@@ -248,7 +245,6 @@ export const main = (
           .selectAll(".circle_group")
           .data(res.nodes);
 
-        console.log(data.children.map((d) => ({ ...d, x: data.x, y: data.y })));
         res.nodes = [
           ...res.nodes,
           ...data.children.map((d) => ({ ...d, x: data.x, y: data.y })),
@@ -347,8 +343,7 @@ export const main = (
 
         force.nodes(res.nodes);
         force.force("link", d3.forceLink(res.links));
-        force.force("collide", null);
-        console.log(res.nodes);
+        // force.force("collide", null);
         force.on("tick", () => {
           d3.selectAll(".circle")
             .attr("cx", (d) => d.x)
@@ -365,9 +360,9 @@ export const main = (
         force.on("end", function () {
           flag = true;
         });
-        force.velocityDecay(0.97);
-        force.alphaDecay(0.01);
-        force.alpha(0.8).restart();
+        force.velocityDecay(0.9);
+        // force.alphaDecay(0);
+        force.alpha(0.5).restart();
         lasso = d3
           .lasso()
           .closePathSelect(true)
