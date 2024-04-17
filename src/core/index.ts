@@ -391,6 +391,14 @@ export const main = (
         });
         force.velocityDecay(0.9);
         force.alpha(0.5).restart();
+        // 添加震荡
+        setTimeout(() => {
+          force.alphaMin(0.01);
+          force.velocityDecay(0.85);
+
+          force.alpha(0.9).restart();
+        }, 1000);
+
         lasso = d3
           .lasso()
           .closePathSelect(true)
