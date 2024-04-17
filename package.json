@@ -9,8 +9,10 @@
   },
   "dependencies": {
     "@arco-design/web-react": "2.61.1",
+    "@types/lodash": "^4.17.0",
     "d3": "4",
     "jotai": "^2.7.1",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "styled-components": "^6.1.8",

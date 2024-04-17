@@ -1,12 +1,12 @@
 // @ts-nocheck
-
+//TOOD: 调整聚合强度时出现问题
 import { v4 as uuid } from "uuid";
-import { rangeMapping } from "../utils";
+import { rangeMapping } from "./utils";
 import * as d3 from "d3";
 
 let lasso: any;
 let flag = true;
-// let velocityDecay = 0.7;
+let velocityDecay = 0.7;
 let forceStore;
 
 const getValidateId = (id: string) =>
@@ -16,6 +16,7 @@ const avg = (arr: any[]) =>
 
 const init = (res) => {
   const svg = d3.select("#viewport").attr("height", 1000).attr("width", 1000);
+  svg.selectAll("*").remove();
   const container = svg.append("g").attr("id", "container");
   let edges = container
     .selectAll(".edges_group")
@@ -78,8 +79,9 @@ export const main = (
   data: { nodes: any[]; links: any[] },
   lassoFlag: boolean,
   isInit: boolean,
-  velocityDecay: number
+  velocityDecayAt: number
 ) => {
+  velocityDecay = velocityDecayAt;
   let force;
   let res = data;
   //expdata,筛选出与exp相关的节点
@@ -98,9 +100,9 @@ export const main = (
   // res.nodes = res.nodes.filter((d) => nodeset.has(d.mgmt_ip));
 
   //添加id
-  res.links = res.links.map((l, id) => ({ ...l, id }));
 
   if (isInit) {
+    res.links = res.links.map((l, id) => ({ ...l, id }));
     force = init(res);
     forceStore = force;
   } else {
@@ -294,11 +296,11 @@ export const main = (
               (n) => n.mgmt_ip === d.target.mgmt_ip
             );
 
-            if (source.selected) {
+            if (source?.selected) {
               source.x = data.x;
               source.y = data.y;
             }
-            if (target.selected) {
+            if (target?.selected) {
               target.x = data.x;
               target.y = data.y;
             }
@@ -388,7 +390,6 @@ export const main = (
           flag = true;
         });
         force.velocityDecay(0.9);
-        // force.alphaDecay(0);
         force.alpha(0.5).restart();
         lasso = d3
           .lasso()
@@ -461,6 +462,7 @@ export const main = (
             rangeMapping(selectedNodesData.length, res.nodes.length) / 20
           ).toFixed(2)
     ); //区间映射
+    console.log(velocityDecay);
     force.velocityDecay(velocityDecay);
     force.alphaDecay(0.01);
     force.restart();
@@ -483,6 +485,7 @@ export const main = (
       d3.select("#viewport").call(zoom);
     }
   });
+  // lasso.call(d3.select("#viewport"));
 };
 
 // (async () => {

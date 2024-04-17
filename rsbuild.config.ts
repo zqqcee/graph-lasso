@@ -5,6 +5,9 @@ export default defineConfig({
   html: {
     template: "./index.html",
   },
+  dev: {
+    writeToDisk: true,
+  },
   plugins: [pluginReact()],
   output: {
     externals: {

@@ -22,11 +22,7 @@ function App() {
       </Header>
       <Layout>
         <Content>
-          <Canvas
-            res={data}
-            lassoFlag={lassoFlag}
-            velocityDecay={1 - velocityDecay}
-          />
+          <Canvas lassoFlag={lassoFlag} velocityDecay={1 - velocityDecay} />
         </Content>
         <Sider width={"30%"}>
           <Operation />
