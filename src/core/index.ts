@@ -7,6 +7,11 @@ import * as d3 from "d3";
 let lasso: any;
 let flag = true;
 let velocityDecay = 0.7;
+let alpha = 0.5;
+let collide = 8;
+let alphaMin = 0.01;
+let alphaDecay = 0.01;
+let linkStrength = 0.4;
 let forceStore;
 
 const getValidateId = (id: string) =>
@@ -52,9 +57,7 @@ const init = (res) => {
     )
     .force(
       "collide",
-      d3.forceCollide(function (d) {
-        return 8;
-      })
+      d3.forceCollide(collide)
     )
     .force("charge", d3.forceManyBody().strength(-40))
     .force("center", d3.forceCenter(500, 500))
@@ -79,9 +82,19 @@ export const main = (
   data: { nodes: any[]; links: any[] },
   lassoFlag: boolean,
   isInit: boolean,
-  velocityDecayAt: number
+  velocityDecayAt: number,
+  alphaAt:number,
+  collideAt:number,
+  alphaMinAt:number,
+  alphaDecayAt:number,
+  linkStrengthAt:number
 ) => {
   velocityDecay = velocityDecayAt;
+  alpha = alphaAt;
+  collide = collideAt;
+  alphaMin = alphaMinAt;
+  alphaDecay = alphaDecayAt;
+  linkStrength = linkStrengthAt;
   let force;
   let res = data;
   //expdata,筛选出与exp相关的节点
@@ -371,7 +384,7 @@ export const main = (
         // .attr("cy", (d) => d.y);
 
         force.nodes(res.nodes);
-        force.force("link", d3.forceLink(res.links));
+        force.force("link", d3.forceLink(res.links).strength(linkStrength));
         // force.force("collide", null);
         force.on("tick", () => {
           d3.selectAll(".circle")
@@ -389,8 +402,11 @@ export const main = (
         force.on("end", function () {
           flag = true;
         });
-        force.velocityDecay(0.9);
-        force.alpha(0.5).restart();
+        force.force("collide", d3.forceCollide(collide))
+        force.velocityDecay(velocityDecay);
+        force.alphaMin(alphaMin);
+        force.alphaDecay(alphaDecay);
+        force.alpha(alpha).restart();
         lasso = d3
           .lasso()
           .closePathSelect(true)
@@ -417,8 +433,8 @@ export const main = (
 
     let count = 0;
     force.nodes(res.nodes);
-    force.force("link", d3.forceLink(res.links));
-    force.force("collide", d3.forceCollide(5));
+    force.force("link", d3.forceLink(res.links).strength(linkStrength));
+    force.force("collide", d3.forceCollide(collide));
     force.on("tick", () => {
       if (count === 260) {
         selectedNodesItem.remove();
@@ -454,17 +470,20 @@ export const main = (
       flag = true;
     });
     force.alpha(
-      Number(
-        rangeMapping(selectedNodesData.length, res.nodes.length) / 20
-      ).toFixed(2) < 0.2
-        ? 0.4
-        : Number(
-            rangeMapping(selectedNodesData.length, res.nodes.length) / 20
-          ).toFixed(2)
+      // Number(
+      //   rangeMapping(selectedNodesData.length, res.nodes.length) / 20
+      // ).toFixed(2) < 0.2
+      //   ? 0.4
+      //   : Number(
+      //       rangeMapping(selectedNodesData.length, res.nodes.length) / 20
+      //     ).toFixed(2)
+      alpha
     ); //区间映射
-    console.log(velocityDecay);
+    console.log(alpha)
+    force.alphaMin(alphaMin);
+    force.force("collide", d3.forceCollide(collide));
     force.velocityDecay(velocityDecay);
-    force.alphaDecay(0.01);
+    force.alphaDecay(alphaDecay);
     force.restart();
   };
 
