@@ -12,7 +12,7 @@ const Wrapper = styled.div`
   height: 100%;
   background-color: #f6f6f6;
 `;
-function Canvas({ lassoFlag, velocityDecay }: any) {
+function Canvas({ lassoFlag, velocityDecay ,alpha,collide,alphaMin,alphaDecay,linkStrength}: any) {
   const [dataName] = useAtom<string>(dataNameAtom);
   const initRef = React.useRef(true);
 
@@ -21,10 +21,15 @@ function Canvas({ lassoFlag, velocityDecay }: any) {
       cloneDeep(DataMap[dataName]),
       lassoFlag,
       initRef.current,
-      velocityDecay
+      velocityDecay,
+      alpha,
+      collide,
+      alphaMin,
+      alphaDecay,
+      linkStrength
     );
     initRef.current = false;
-  }, [lassoFlag, velocityDecay, dataName]);
+  }, [lassoFlag, velocityDecay, dataName,alpha,collide,alphaMin,alphaDecay,linkStrength]);
 
   React.useEffect(() => {
     initRef.current = true;
