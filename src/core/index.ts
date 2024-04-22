@@ -56,10 +56,10 @@ const init = (res) => {
       })
     )
     .force("collide", d3.forceCollide(collide))
-    .force("charge", d3.forceManyBody().strength(-40))
+    .force("charge", d3.forceManyBody().strength(-10))
     .force("center", d3.forceCenter(500, 500))
-    .force("y", d3.forceY(500))
-    .force("x", d3.forceX(500))
+    .force("y", d3.forceY(500).strength(0.04))
+    .force("x", d3.forceX(500).strength(0.04))
     .on("tick", () => {
       d3.selectAll(".circle")
         .attr("cx", (d) => d.x)
@@ -401,12 +401,13 @@ export const main = (
         });
         force.velocityDecay(0.9);
         force.alpha(0.5).restart();
+        force.force("y", d3.forceY(500).strength(0.04));
+        force.force("x", d3.forceX(500).strength(0.04));
         // 添加震荡
         setTimeout(() => {
           force.alphaMin(0.01);
           force.velocityDecay(0.85);
-
-          force.alpha(0.9).restart();
+          force.alpha(0.5).restart();
         }, 1000);
 
         lasso = d3

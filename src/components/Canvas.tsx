@@ -12,7 +12,15 @@ const Wrapper = styled.div`
   height: 100%;
   background-color: #f6f6f6;
 `;
-function Canvas({ lassoFlag, velocityDecay ,alpha,collide,alphaMin,alphaDecay,linkStrength}: any) {
+function Canvas({
+  lassoFlag,
+  velocityDecay,
+  alpha,
+  collide,
+  alphaMin,
+  alphaDecay,
+  linkStrength,
+}: any) {
   const [dataName] = useAtom<string>(dataNameAtom);
   const initRef = React.useRef(true);
 
@@ -29,11 +37,29 @@ function Canvas({ lassoFlag, velocityDecay ,alpha,collide,alphaMin,alphaDecay,li
       linkStrength
     );
     initRef.current = false;
-  }, [lassoFlag, velocityDecay, dataName,alpha,collide,alphaMin,alphaDecay,linkStrength]);
+  }, [
+    lassoFlag,
+    velocityDecay,
+    dataName,
+    alpha,
+    collide,
+    alphaMin,
+    alphaDecay,
+    linkStrength,
+  ]);
 
   React.useEffect(() => {
     initRef.current = true;
-  }, [dataName]);
+  }, [
+    dataName,
+    velocityDecay,
+    dataName,
+    alpha,
+    collide,
+    alphaMin,
+    alphaDecay,
+    linkStrength,
+  ]);
   return (
     <Wrapper>
       <svg id={"viewport"}></svg>
