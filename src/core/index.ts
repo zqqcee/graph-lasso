@@ -60,7 +60,7 @@ const init = (res) => {
     )
     .force("collide", d3.forceCollide(collide))
     .force("charge", d3.forceManyBody().strength(-10))
-    .force("center", d3.forceCenter(500, 500))
+    // .force("center", d3.forceCenter(500, 500))
     .force("y", d3.forceY(500).strength(0.04))
     .force("x", d3.forceX(500).strength(0.04))
     .on("tick", () => {
@@ -180,7 +180,6 @@ export const main = (
     needToDelEdges.remove();
 
     const needToEditEdges = res.links.filter((e) => {
-      console.log(e);
       //仅有一个端点在选择中连边其中的
       const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
       const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
@@ -217,7 +216,6 @@ export const main = (
     res.links = res.links.filter((e) => {
       return !needToEditEdgesData.includes(e);
     });
-    console.log("links:", res.links);
 
     const restNodes = res.nodes.filter((n) => !selectedNodesSet.has(n.mgmt_ip));
 
@@ -336,9 +334,7 @@ export const main = (
         //     })
         //     .remove();
         // });
-        console.log(getValidateId(data.mgmt_ip));
         d3.selectAll(`#${getValidateId(data.mgmt_ip)}`).remove();
-        console.log(data.childrenEditlinks);
         for (let i = 0; i < linkUpdate.length; i++) {
           let link = linkUpdate[i];
           for (let j = 0; j < data.childrenStorelinks.length; j++) {
@@ -356,7 +352,6 @@ export const main = (
             }
           }
         }
-        console.log(linkUpdate);
         res.links = res.links.filter((e) => {
           return !data.childrenEditlinks.includes(e);
         });
@@ -401,14 +396,12 @@ export const main = (
             return { ...d, source, target };
           }),
         ];
-        console.log(res.links);
 
         // let edges = container
         //   .selectAll(".edges_group")
         //   .data(res.links)
         //   .exit()
         //   .remove();
-        console.log(res.links);
         // 处理边线的进入、更新、退出
         container
           .selectAll(".edges_group")
@@ -424,9 +417,6 @@ export const main = (
           .attr("stroke-width", 0.5)
           .attr("d", (d) => {
             return `M ${data.x} ${data.y} L ${data.x} ${data.y}`;
-          })
-          .on("click", (d) => {
-            console.log(d);
           });
         // .transition()
         // .duration(500)
@@ -453,16 +443,19 @@ export const main = (
         force.on("end", function () {
           flag = true;
         });
-        force.velocityDecay(0.9);
-        force.alpha(0.5).restart();
+        force.velocityDecay(0.99);
+        force.alpha(0.3).restart();
         force.force("y", d3.forceY(500).strength(0.04));
         force.force("x", d3.forceX(500).strength(0.04));
+        // force.force("y", d3.forceY(500));
+        // force.force("x", d3.forceX(500));
         // 添加震荡
         setTimeout(() => {
-          force.alphaMin(0.01);
-          force.velocityDecay(0.85);
-          force.alpha(0.5).restart();
-        }, 1000);
+          //todo: zqc
+          force.alphaMin(0);
+          force.velocityDecay(0.98);
+          force.alpha(0.1).restart();
+        }, 500);
 
         lasso = d3
           .lasso()
@@ -536,11 +529,10 @@ export const main = (
       //     ).toFixed(2)
       alpha
     ); //区间映射
-    console.log(alpha);
     force.alphaMin(alphaMin);
     force.force("collide", d3.forceCollide(collide));
-    force.velocityDecay(velocityDecay);
-    force.alphaDecay(alphaDecay);
+    force.velocityDecay(0.6);
+    force.alphaDecay(0.01);
     force.restart();
   };
 
