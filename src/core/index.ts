@@ -60,7 +60,7 @@ const init = (res) => {
     )
     .force("collide", d3.forceCollide(collide))
     .force("charge", d3.forceManyBody().strength(-10))
-    .force("center", d3.forceCenter(500, 500))
+    // .force("center", d3.forceCenter(500, 500))
     .force("y", d3.forceY(500).strength(0.04))
     .force("x", d3.forceX(500).strength(0.04))
     .on("tick", () => {
@@ -162,7 +162,6 @@ export const main = (
       .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip);
 
     const selectedNodesSet = new Set(selectedNodesData.map((n) => n.mgmt_ip));
-    console.log(selectedNodesSet);
     const uniqueId = uuid();
 
     /**
@@ -180,7 +179,6 @@ export const main = (
     needToDelEdges.remove();
 
     const needToEditEdges = res.links.filter((e) => {
-      console.log(e);
       //仅有一个端点在选择中连边其中的
       const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
       const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
@@ -217,7 +215,6 @@ export const main = (
     res.links = res.links.filter((e) => {
       return !needToEditEdgesData.includes(e);
     });
-    console.log("links:", res.links);
 
     const restNodes = res.nodes.filter((n) => !selectedNodesSet.has(n.mgmt_ip));
 
@@ -276,7 +273,6 @@ export const main = (
       .attr("d", (d) => {
         return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
       });
-    console.log("Edit:", res.links);
     let newNodeCoordinates = []; // 用于存储新生成点的坐标
     /**
      * 主要设置生成新节点的动画以及被选中节点消失的动画过渡效果
@@ -314,18 +310,6 @@ export const main = (
           ...res.nodes,
           ...data.children.map((d) => ({ ...d, x: data.x, y: data.y })),
         ];
-        let nodeEnter = nodeSelection
-          .data(res.nodes, (d) => d.mgmt_ip)
-          .enter()
-          .append("g")
-          .attr("class", "circle_group")
-          .append("circle")
-          .attr("fill", "black")
-          .attr("class", "circle")
-          .attr("r", 3.5)
-          .attr("cx", data.x)
-          .attr("cy", data.y)
-          .on("click", (d) => console.log(d));
 
         // 删除Editlinks所绘制的边
         // data.childrenEditlinks.forEach((link) => {
@@ -336,9 +320,7 @@ export const main = (
         //     })
         //     .remove();
         // });
-        console.log(getValidateId(data.mgmt_ip));
         d3.selectAll(`#${getValidateId(data.mgmt_ip)}`).remove();
-        console.log(data.childrenEditlinks);
         for (let i = 0; i < linkUpdate.length; i++) {
           let link = linkUpdate[i];
           for (let j = 0; j < data.childrenStorelinks.length; j++) {
@@ -356,15 +338,9 @@ export const main = (
             }
           }
         }
-        console.log(linkUpdate);
         res.links = res.links.filter((e) => {
           return !data.childrenEditlinks.includes(e);
         });
-        container
-          .selectAll(".edges_group")
-          .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
-          .exit()
-          .remove();
         res.links = [
           ...res.links,
           // ...data.childrenStorelinks?.map((d) => {
@@ -401,14 +377,18 @@ export const main = (
             return { ...d, source, target };
           }),
         ];
-        console.log(res.links);
+
+        container
+          .selectAll(".edges_group")
+          .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
+          .exit()
+          .remove();
 
         // let edges = container
         //   .selectAll(".edges_group")
         //   .data(res.links)
         //   .exit()
         //   .remove();
-        console.log(res.links);
         // 处理边线的进入、更新、退出
         container
           .selectAll(".edges_group")
@@ -424,9 +404,6 @@ export const main = (
           .attr("stroke-width", 0.5)
           .attr("d", (d) => {
             return `M ${data.x} ${data.y} L ${data.x} ${data.y}`;
-          })
-          .on("click", (d) => {
-            console.log(d);
           });
         // .transition()
         // .duration(500)
@@ -434,6 +411,17 @@ export const main = (
         //   return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
         // });
 
+        nodeSelection
+          .data(res.nodes, (d) => d.mgmt_ip)
+          .enter()
+          .append("g")
+          .attr("class", "circle_group")
+          .append("circle")
+          .attr("fill", "black")
+          .attr("class", "circle")
+          .attr("r", 3.5)
+          .attr("cx", data.x)
+          .attr("cy", data.y);
         force.nodes(res.nodes);
         force.force("link", d3.forceLink(res.links).strength(linkStrength));
         // force.force("collide", null);
@@ -453,16 +441,19 @@ export const main = (
         force.on("end", function () {
           flag = true;
         });
-        force.velocityDecay(0.9);
-        force.alpha(0.5).restart();
+        force.velocityDecay(0.99);
+        force.alpha(0.3).restart();
         force.force("y", d3.forceY(500).strength(0.04));
         force.force("x", d3.forceX(500).strength(0.04));
+        // force.force("y", d3.forceY(500));
+        // force.force("x", d3.forceX(500));
         // 添加震荡
         setTimeout(() => {
-          force.alphaMin(0.01);
-          force.velocityDecay(0.85);
-          force.alpha(0.5).restart();
-        }, 1000);
+          //todo: zqc
+          force.alphaMin(0);
+          force.velocityDecay(0.97);
+          force.alpha(0.1).restart();
+        }, 500);
 
         lasso = d3
           .lasso()
@@ -536,11 +527,11 @@ export const main = (
       //     ).toFixed(2)
       alpha
     ); //区间映射
-    console.log(alpha);
     force.alphaMin(alphaMin);
     force.force("collide", d3.forceCollide(collide));
-    force.velocityDecay(velocityDecay);
-    force.alphaDecay(alphaDecay);
+    force.velocityDecay(0.7);
+    force.alphaDecay(0.01);
+    force.alphaMin(0);
     force.restart();
   };
 
