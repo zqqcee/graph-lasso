@@ -441,7 +441,7 @@ export const main = (
         force.on("end", function () {
           flag = true;
         });
-        force.velocityDecay(0.99);
+        force.velocityDecay(0.96);
         force.alpha(0.3).restart();
         force.force("y", d3.forceY(500).strength(0.04));
         force.force("x", d3.forceX(500).strength(0.04));
@@ -451,9 +451,9 @@ export const main = (
         setTimeout(() => {
           //todo: zqc
           force.alphaMin(0);
-          force.velocityDecay(0.97);
-          force.alpha(0.1).restart();
-        }, 500);
+          force.velocityDecay(0.93);
+          force.alpha(0.5).restart();
+        }, 1000);
 
         lasso = d3
           .lasso()
