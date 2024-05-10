@@ -98,6 +98,7 @@ export const main = (
   let force;
   let res = data;
   //expdata,筛选出与exp相关的节点
+  console.log(data);
 
   //  /**
   //   *   const expIp = "125.217.47.42";
