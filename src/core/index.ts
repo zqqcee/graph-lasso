@@ -5,7 +5,7 @@ import { rangeMapping } from "./utils";
 import * as d3 from "d3";
 
 let lasso: any;
-let flag = true;
+let flag = true;//标记是否可展开
 let velocityDecay = 0.7;
 let alpha = 0.5;
 let collide = 8;
@@ -508,6 +508,7 @@ export const main = (
       /**
        * 被选中的节点聚合的过程中，其他节点也会一直调整布局
        */
+      //坍塌动画
       selectedNodesItem
         .attr("cx", (d) => d.x - ((d.x - tempx) / 260) * count)
         .attr("cy", (d) => d.y - ((d.y - tempy) / 260) * count);
