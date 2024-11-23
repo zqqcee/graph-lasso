@@ -2,8 +2,10 @@
 //TOOD: 调整聚合强度时出现问题
 import { v4 as uuid } from "uuid";
 import { rangeMapping } from "./utils";
-import { ageMobility } from "../plugin";
+import { nodeMobility } from "../plugin";
 import * as d3 from "d3";
+import { getAdjacentMatrix } from "../plugin/getAdjacentMatrix";
+import { restrictForce } from '../plugin/restrictForce'
 
 
 let lasso: any;
@@ -197,7 +199,6 @@ export const main = (
       return sourceInSelection || targetInSelection;
     });
     // ! 修改 mobility
-
 
     const needToEditEdgesData = needToEditEdges;
     const needToEditEdgesDataIds = needToEditEdgesData.map((d) => d.id);
@@ -469,7 +470,12 @@ export const main = (
     force.nodes(res.nodes);
     force.force("link", d3.forceLink(res.links).strength(linkStrength));
     force.force("collide", d3.forceCollide(collide));
-    // force.force('custom', ageMobility(force, res.links))
+
+    // !计算 mobility 传入force中
+    const adj = getAdjacentMatrix(res.links)
+    nodeMobility(res.nodes, adj, 'age')
+    force.force('custom', restrictForce(force))
+
 
     force.on("tick", () => {
       if (count === 260) {
@@ -507,20 +513,13 @@ export const main = (
       flag = true;
     });
     force.alpha(
-      // Number(
-      //   rangeMapping(selectedNodesData.length, res.nodes.length) / 20
-      // ).toFixed(2) < 0.2
-      //   ? 0.4
-      //   : Number(
-      //       rangeMapping(selectedNodesData.length, res.nodes.length) / 20
-      //     ).toFixed(2)
       alpha
-    ); //区间映射
+    );
     force.alphaMin(alphaMin);
     force.force("collide", d3.forceCollide(collide));
-    force.velocityDecay(0.7);
-    force.alphaDecay(0.01);
-    force.alphaMin(0);
+    // force.velocityDecay(0.7);
+    // force.alphaDecay(0.01);
+    // force.alphaMin(0);
     force.restart();
   };
 
