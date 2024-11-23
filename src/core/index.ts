@@ -292,10 +292,8 @@ export const main = (
       .attr("cy", avgY)
       .attr("fill", "blue")
       .on("contextmenu", function (data) {
+        // 展开
         d3.event.preventDefault();
-        // if (!flag) {
-        //   return;
-        // }
         let linkUpdate = res.links.filter((e) => {
           return e.source === data || e.target === data;
         });
@@ -450,7 +448,6 @@ export const main = (
         // force.force("x", d3.forceX(500));
         // 添加震荡
         setTimeout(() => {
-          //todo: zqc
           force.alphaMin(0);
           force.velocityDecay(0.93);
           force.alpha(0.5).restart();
