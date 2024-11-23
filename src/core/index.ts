@@ -2,7 +2,9 @@
 //TOOD: 调整聚合强度时出现问题
 import { v4 as uuid } from "uuid";
 import { rangeMapping } from "./utils";
+import { ageMobility } from "../plugin";
 import * as d3 from "d3";
+
 
 let lasso: any;
 let flag = true;//标记是否可展开
@@ -179,37 +181,24 @@ export const main = (
     res.links = res.links.filter((e) => !needToDelEdgesDataIds.includes(e.id));
     needToDelEdges.remove();
 
+    // ! 修改 mobility
     const needToEditEdges = res.links.filter((e) => {
       //仅有一个端点在选择中连边其中的
       const sourceInSelection = selectedNodesSet.has(e.source.mgmt_ip);
       const targetInSelection = selectedNodesSet.has(e.target.mgmt_ip);
-      if (e.id == "7") {
-        console.log(7);
-      }
       //标记哪边的端点在集合中
       if (sourceInSelection) {
         e.source.selected = true;
+        e.source.changed = 1
       } else if (targetInSelection) {
         e.target.selected = true;
+        e.source.changed = 1
       }
-      // return (
-      //   (sourceInSelection && !targetInSelection) ||
-      //   (targetInSelection && !sourceInSelection)
-      // );
       return sourceInSelection || targetInSelection;
     });
-    // .attr("id", getValidateId(uniqueId));
+    // ! 修改 mobility
 
-    // needToEditEdges
-    //   .transition()
-    //   .duration(1000)
-    //   .attr("d", (d) => {
-    //     if (selectedNodesSet.has(d.source.mgmt_ip)) {
-    //       return `M ${avgX} ${avgY} L ${d.target.x} ${d.target.y}`;
-    //     } else if (selectedNodesSet.has(d.target.mgmt_ip)) {
-    //       return `M ${d.source.x} ${d.source.y} L ${avgX} ${avgY}`;
-    //     }
-    //   });
+
     const needToEditEdgesData = needToEditEdges;
     const needToEditEdgesDataIds = needToEditEdgesData.map((d) => d.id);
     //先把这些links从中删掉
@@ -229,12 +218,15 @@ export const main = (
         id,
       };
     });
+
+    //! 修改 mobility
     const newNode = {
       mgmt_ip: uniqueId,
       fill: "red",
       className: "new-circle",
       x: avgX,
       y: avgY,
+      changed: 1,
       children: selectedNodesData,
       childrenStorelinks: [...store_newlinks], // 聚合前的连边关系
       childrenRemovelinks: [...needToDelEdgesData], // 聚合后删除的连边，需要复原
@@ -298,27 +290,24 @@ export const main = (
           return e.source === data || e.target === data;
         });
         const svg = d3.select("#viewport");
-        res.nodes = res.nodes.filter((n) => n.mgmt_ip !== data.mgmt_ip);
+        res.nodes = res.nodes.filter((n) => n.mgmt_ip !== data.mgmt_ip)
         d3.select(this).remove();
         // 处理节点的进入、更新、退出
         let nodeSelection = container
           .selectAll(".circle_group")
           .data(res.nodes, (d) => d.mgmt_ip);
 
+        // ! 修改 mobility
+        // ! 重置位置
+        const newNodes = [...data.children.map((d) => ({ ...d, x: data.x, y: data.y, age: 1 }))]
+        res.nodes.forEach(d => {
+          d.changed = 0
+        })
         res.nodes = [
           ...res.nodes,
-          ...data.children.map((d) => ({ ...d, x: data.x, y: data.y })),
+          ...data.children.map((d) => ({ ...d, x: data.x, y: data.y, age: 1 }))
         ];
 
-        // 删除Editlinks所绘制的边
-        // data.childrenEditlinks.forEach((link) => {
-        //   container
-        //     .selectAll(".edges_group")
-        //     .filter((d) => {
-        //       return d === link;
-        //     })
-        //     .remove();
-        // });
         d3.selectAll(`#${getValidateId(data.mgmt_ip)}`).remove();
         for (let i = 0; i < linkUpdate.length; i++) {
           let link = linkUpdate[i];
@@ -444,11 +433,10 @@ export const main = (
         force.alpha(0.3).restart();
         force.force("y", d3.forceY(500).strength(0.04));
         force.force("x", d3.forceX(500).strength(0.04));
-        // force.force("y", d3.forceY(500));
-        // force.force("x", d3.forceX(500));
+
         // 添加震荡
         setTimeout(() => {
-          force.alphaMin(0);
+          force.alphaMin(0.1);
           force.velocityDecay(0.93);
           force.alpha(0.5).restart();
         }, 1000);
@@ -481,6 +469,8 @@ export const main = (
     force.nodes(res.nodes);
     force.force("link", d3.forceLink(res.links).strength(linkStrength));
     force.force("collide", d3.forceCollide(collide));
+    // force.force('custom', ageMobility(force, res.links))
+
     force.on("tick", () => {
       if (count === 260) {
         selectedNodesItem.remove();
