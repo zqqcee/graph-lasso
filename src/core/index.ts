@@ -4,7 +4,7 @@ import { v4 as uuid } from "uuid";
 import { rangeMapping } from "./utils";
 import { nodeMobility } from "../plugin";
 import * as d3 from "d3";
-import { getAdjacentMatrix } from "../plugin/getAdjacentMatrix";
+import { getAdjacentMatrix, getDegree } from "../plugin/common";
 import { restrictForce } from '../plugin/restrictForce'
 
 
@@ -473,7 +473,8 @@ export const main = (
 
     // !计算 mobility 传入force中
     const adj = getAdjacentMatrix(res.links)
-    nodeMobility(res.nodes, adj, 'age')
+    // nodeMobility({ nodes: res.nodes, adj }, 'age')
+    // nodeMobility({ nodes: res.nodes, adj }, 'degree')
     force.force('custom', restrictForce(force))
 
 

@@ -1,6 +1,6 @@
 //@ts-nocheck
 
-import { getAdjacentMatrix } from "./getAdjacentMatrix";
+import { getAdjacentMatrix } from "./common";
 
 /**
  * 
