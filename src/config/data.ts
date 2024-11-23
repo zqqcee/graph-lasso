@@ -39,8 +39,8 @@ export const dataOptions = [
 ];
 
 export const DataMap: { [key: string]: { nodes: any[]; links: any[] } } = {
-  midData: midData,
   smallData: smallData,
+  midData: midData,
   largeData: largeData,
   connectionData: connectionData,
   bigData: bigData,

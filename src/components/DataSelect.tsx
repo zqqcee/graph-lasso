@@ -6,7 +6,7 @@ import { useAtom } from "jotai";
 const Option = Select.Option;
 
 function DataSelect() {
-  const [, setDataName] = useAtom<string>(dataNameAtom);
+  const [dataName, setDataName] = useAtom<string>(dataNameAtom);
 
   return (
     <div>
@@ -14,7 +14,8 @@ function DataSelect() {
         onChange={(v) => {
           setDataName(v);
         }}
-        defaultValue={"midData"}
+        value={dataName}
+        // defaultValue={}
       >
         {dataOptions.map((option) => (
           <Option key={option.key} value={option.key}>

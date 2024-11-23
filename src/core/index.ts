@@ -21,7 +21,7 @@ let forceStore;
 const getValidateId = (id: string) =>
   `id_${id.replaceAll("-", "").replaceAll(".", "")}`;
 const avg = (arr: any[]) =>
-  Math.floor(arr.reduce((p, c) => p + c) / arr.length);
+  Math.floor(arr?.reduce((p, c) => p + c) / arr.length);
 
 const init = (res) => {
   const svg = d3.select("#viewport").attr("height", 1000).attr("width", 1000);
@@ -37,7 +37,7 @@ const init = (res) => {
     .attr("class", "edge")
     .attr("stroke", "#caadad")
     .attr("stroke-width", 0.5)
-    .on("click", (d) => console.log(d));
+
   const circles = container
     .selectAll(".circle_group")
     .data(res.nodes, (d) => d.mgmt_ip)
@@ -49,7 +49,9 @@ const init = (res) => {
     .attr("fill", (d) => d.fill)
     .attr("r", 3.5)
     .attr("cx", 100)
-    .attr("cy", 100);
+    .attr("cy", 100)
+    .on("click", (d) => console.log(d.mgmt_ip));
+
 
   let force = d3
     .forceSimulation(res.nodes)
@@ -168,6 +170,7 @@ export const main = (
 
     const selectedNodesSet = new Set(selectedNodesData.map((n) => n.mgmt_ip));
     const uniqueId = uuid();
+    res.nodes.forEach(n => { n.changed = 0 })
 
     /**
      * 保留删除连边的动画
@@ -191,14 +194,13 @@ export const main = (
       //标记哪边的端点在集合中
       if (sourceInSelection) {
         e.source.selected = true;
-        e.source.changed = 1
+        e.target.changed = 1
       } else if (targetInSelection) {
         e.target.selected = true;
         e.source.changed = 1
       }
       return sourceInSelection || targetInSelection;
     });
-    // ! 修改 mobility
 
     const needToEditEdgesData = needToEditEdges;
     const needToEditEdgesDataIds = needToEditEdgesData.map((d) => d.id);
@@ -292,6 +294,9 @@ export const main = (
         });
         const svg = d3.select("#viewport");
         res.nodes = res.nodes.filter((n) => n.mgmt_ip !== data.mgmt_ip)
+        //! 先把所有节点的change都重置为0
+        res.nodes.forEach(n => { n.changed = 0 })
+
         d3.select(this).remove();
         // 处理节点的进入、更新、退出
         let nodeSelection = container
@@ -300,20 +305,21 @@ export const main = (
 
         // ! 修改 mobility
         // ! 重置位置
-        const newNodes = [...data.children.map((d) => ({ ...d, x: data.x, y: data.y, age: 1 }))]
         res.nodes.forEach(d => {
           d.changed = 0
         })
         res.nodes = [
           ...res.nodes,
-          ...data.children.map((d) => ({ ...d, x: data.x, y: data.y, age: 1 }))
+          ...data.children.map((d) => ({ ...d, x: data.x, y: data.y, changed: 1 }))
         ];
 
         d3.selectAll(`#${getValidateId(data.mgmt_ip)}`).remove();
         for (let i = 0; i < linkUpdate.length; i++) {
           let link = linkUpdate[i];
+          link.source.changed = 1
+          link.target.changed = 1
           for (let j = 0; j < data.childrenStorelinks.length; j++) {
-            if (link.id == data.childrenStorelinks[j].id) {
+            if (link.id === data.childrenStorelinks[j].id) {
               if (link.source.mgmt_ip === data.mgmt_ip) {
                 link.source = res.nodes.find(
                   (n) => n.mgmt_ip === data.childrenStorelinks[j].source.mgmt_ip
@@ -332,25 +338,6 @@ export const main = (
         });
         res.links = [
           ...res.links,
-          // ...data.childrenStorelinks?.map((d) => {
-          //   const source = res.nodes.find(
-          //     (n) => n.mgmt_ip === d.source.mgmt_ip
-          //   );
-          //   const target = res.nodes.find(
-          //     (n) => n.mgmt_ip === d.target.mgmt_ip
-          //   );
-
-          //   if (source?.selected) {
-          //     source.x = data.x;
-          //     source.y = data.y;
-          //   }
-          //   if (target?.selected) {
-          //     target.x = data.x;
-          //     target.y = data.y;
-          //   }
-
-          //   return { ...d, source, target };
-          // }),
           ...linkUpdate,
           ...data.childrenRemovelinks?.map((d) => {
             const source = res.nodes.find(
@@ -434,6 +421,8 @@ export const main = (
         force.alpha(0.3).restart();
         force.force("y", d3.forceY(500).strength(0.04));
         force.force("x", d3.forceX(500).strength(0.04));
+        force.force('custom', restrictForce(force))
+
 
         // 添加震荡
         setTimeout(() => {
@@ -475,6 +464,7 @@ export const main = (
     const adj = getAdjacentMatrix(res.links)
     // nodeMobility({ nodes: res.nodes, adj }, 'age')
     // nodeMobility({ nodes: res.nodes, adj }, 'degree')
+
     force.force('custom', restrictForce(force))
 
 
