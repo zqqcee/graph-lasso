@@ -16,6 +16,7 @@ let collide = 8;
 let alphaMin = 0.01;
 let alphaDecay = 0.01;
 let linkStrength = 0.4;
+let linkDistance = 30
 let forceStore;
 
 const getValidateId = (id: string) =>
@@ -63,6 +64,7 @@ const init = (res) => {
         .id(function (d) {
           return d.mgmt_ip;
         })
+        .distance(linkDistance)
     )
     .force("collide", d3.forceCollide(collide))
     .force("charge", d3.forceManyBody().strength(-10))
@@ -79,6 +81,10 @@ const init = (res) => {
       d3.selectAll(".new-circle")
         .attr("cx", (d) => d.x)
         .attr("cy", (d) => d.y);
+    })
+    .on('end', () => {
+      // prevState
+      console.log('------init end---------')
     });
 
   return force;
@@ -170,7 +176,7 @@ export const main = (
 
     const selectedNodesSet = new Set(selectedNodesData.map((n) => n.mgmt_ip));
     const uniqueId = uuid();
-    res.nodes.forEach(n => { n.changed = 0 })
+    res.nodes.forEach(n => { n.changed = 0, n.isNew = 0 }) // ! 先重置
 
     /**
      * 保留删除连边的动画
@@ -222,7 +228,7 @@ export const main = (
       };
     });
 
-    //! 修改 mobility
+    // ! 修改 mobility
     const newNode = {
       mgmt_ip: uniqueId,
       fill: "red",
@@ -230,6 +236,7 @@ export const main = (
       x: avgX,
       y: avgY,
       changed: 1,
+      isNew: 1, // ! 标记是一个新节点
       children: selectedNodesData,
       childrenStorelinks: [...store_newlinks], // 聚合前的连边关系
       childrenRemovelinks: [...needToDelEdgesData], // 聚合后删除的连边，需要复原
@@ -294,7 +301,7 @@ export const main = (
         });
         const svg = d3.select("#viewport");
         res.nodes = res.nodes.filter((n) => n.mgmt_ip !== data.mgmt_ip)
-        //! 先把所有节点的change都重置为0
+        // ! 先把所有节点的change都重置为0
         res.nodes.forEach(n => { n.changed = 0 })
 
         d3.select(this).remove();
@@ -304,18 +311,20 @@ export const main = (
           .data(res.nodes, (d) => d.mgmt_ip);
 
         // ! 修改 mobility
-        // ! 重置位置
+        // ! 先重置
         res.nodes.forEach(d => {
           d.changed = 0
+          d.isNew = 0
         })
         res.nodes = [
           ...res.nodes,
-          ...data.children.map((d) => ({ ...d, x: data.x, y: data.y, changed: 1 }))
+          ...data.children.map((d) => ({ ...d, x: data.x, y: data.y, changed: 1, isNew: 1 })) //! 标记新节点 
         ];
 
         d3.selectAll(`#${getValidateId(data.mgmt_ip)}`).remove();
         for (let i = 0; i < linkUpdate.length; i++) {
           let link = linkUpdate[i];
+          // ! 与新节点有连边的旧节点，changed改为1
           link.source.changed = 1
           link.target.changed = 1
           for (let j = 0; j < data.childrenStorelinks.length; j++) {
@@ -399,7 +408,7 @@ export const main = (
           .attr("cx", data.x)
           .attr("cy", data.y);
         force.nodes(res.nodes);
-        force.force("link", d3.forceLink(res.links).strength(linkStrength));
+        // force.force("link", d3.forceLink(res.links).strength(linkStrength));
         // force.force("collide", null);
         force.on("tick", () => {
           d3.selectAll(".circle")
@@ -457,13 +466,15 @@ export const main = (
 
     let count = 0;
     force.nodes(res.nodes);
-    force.force("link", d3.forceLink(res.links).strength(linkStrength));
+    // force.force("link", d3.forceLink(res.links).strength(linkStrength));
     force.force("collide", d3.forceCollide(collide));
 
     // !计算 mobility 传入force中
     const adj = getAdjacentMatrix(res.links)
     // nodeMobility({ nodes: res.nodes, adj }, 'age')
     // nodeMobility({ nodes: res.nodes, adj }, 'degree')
+    // nodeMobility({ nodes: res.nodes, adj, links: res.links }, 'pin')
+    nodeMobility({ nodes: res.nodes, adj, links: res.links }, 'markov')
 
     force.force('custom', restrictForce(force))
 

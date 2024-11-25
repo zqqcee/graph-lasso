@@ -57,3 +57,51 @@ export function scaleLinear() {
         },
     };
 }
+
+
+export function dijkstra(
+    adjacentMatrix,
+    start //nodeId
+) {
+    // 到所有节点的距离
+    let distances = {};
+    for (let node in adjacentMatrix) {
+        distances[node] = Infinity;
+    }
+    distances[start] = 0;
+
+    let queue: Array<ID> = [];
+    queue.push(start);
+
+    while (queue.length > 0) {
+        let currentNode = queue.shift();
+        if (currentNode !== undefined) {
+            let neighbors = adjacentMatrix[currentNode] || {};
+            for (let neighbor in neighbors) {
+                // 计算从起始节点到该相邻节点的距离
+                let distance = distances[currentNode] + neighbors[neighbor];
+
+                // 如果计算出来的距离比已有的距离更短，则更新距离
+                if (distance < distances[neighbor]) {
+                    distances[neighbor] = distance;
+                    queue.push(neighbor);
+                }
+            }
+        }
+    }
+    return distances;
+}
+
+export const dis = (nodeI, nodeJ) => {
+    if (
+        node1.x !== undefined &&
+        node2.x !== undefined &&
+        node1.y !== undefined &&
+        node2.y !== undefined
+    ) {
+        return Math.sqrt(
+            Math.pow(node1.x - node2.x, 2) + Math.pow(node1.y - node2.y, 2)
+        );
+    }
+    return 0;
+}

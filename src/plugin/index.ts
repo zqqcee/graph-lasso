@@ -5,14 +5,20 @@
 //@ts-nocheck
 import { ageMobility } from "./ageMobility";
 import { degreeMobility } from "./degreeMobility";
+import { markovMobility } from "./markovMobility";
+import { pinMobility } from "./pinMobility";
 
-const nodeMobility = ({ nodes, adj }, algo: string) => {
+const nodeMobility = ({ nodes, adj, links = [] }, algo: string) => {
     switch (algo) {
         case 'age':
             ageMobility(nodes, adj)
             break;
         case 'degree':
             degreeMobility(nodes, adj)
+        case 'pin':
+            pinMobility(nodes, adj, links)
+        case 'markov':
+            markovMobility(nodes, adj, links)
     }
 
 }
