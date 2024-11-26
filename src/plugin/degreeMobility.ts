@@ -8,8 +8,8 @@ export const degreeMobility = (nodes, adj) => {
     );
     if (maxE !== 0) {
         const linear = scaleLinear().domain([minE, maxE]).range([0.6, 1]);
-        nodes.forEach((node) => (node.mobility = linear(degree[node.mgmt_ip])));
+        nodes.forEach((node) => { node.mobility = linear(degree[node.mgmt_ip]) });
     } else {
-        nodes.forEach((node) => (node.mobility = 1));
+        nodes.forEach((node) => { node.mobility = 1 });
     }
 }

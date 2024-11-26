@@ -92,12 +92,12 @@ export function dijkstra(
     return distances;
 }
 
-export const dis = (nodeI, nodeJ) => {
+export const dis = (node1, node2) => {
     if (
-        node1.x !== undefined &&
-        node2.x !== undefined &&
-        node1.y !== undefined &&
-        node2.y !== undefined
+        node1?.x !== undefined &&
+        node2?.x !== undefined &&
+        node1?.y !== undefined &&
+        node2?.y !== undefined
     ) {
         return Math.sqrt(
             Math.pow(node1.x - node2.x, 2) + Math.pow(node1.y - node2.y, 2)

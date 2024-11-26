@@ -3,6 +3,7 @@ import smallData from "../../data/network/less-links.json";
 import connectionData from "../../data/network/only-correspondlinks.json";
 import largeData from "../../data/network/pluslinks.json";
 import bigData from "../../data/network/bigdata.json";
+import emailData from '../../data/osdata-trans/case1.json';
 import { getDescription } from "./utils";
 
 export const dataOptions = [
@@ -36,12 +37,19 @@ export const dataOptions = [
     label: "超大规模",
     discription: getDescription(bigData),
   },
+  {
+    data: emailData,
+    key: "emailData",
+    label: "邮箱",
+    discription: getDescription(bigData),
+  },
 ];
 
 export const DataMap: { [key: string]: { nodes: any[]; links: any[] } } = {
-  smallData: smallData,
   midData: midData,
+  smallData: smallData,
   largeData: largeData,
   connectionData: connectionData,
   bigData: bigData,
+  emailData: emailData
 };

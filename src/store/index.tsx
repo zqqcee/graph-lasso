@@ -15,3 +15,5 @@ export const alphaMinAtom = atom(0.1);
 export const alphaDecayAtom = atom(0.01);
 
 export const linkStrengthAtom = atom(0.4);
+
+export const algoAtom = atom('none');

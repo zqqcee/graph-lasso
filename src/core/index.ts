@@ -6,6 +6,9 @@ import { nodeMobility } from "../plugin";
 import * as d3 from "d3";
 import { getAdjacentMatrix, getDegree } from "../plugin/common";
 import { restrictForce } from '../plugin/restrictForce'
+import { cloneDeep } from "lodash";
+import { CalcMatrix } from "../plugin/calcMatrix";
+import { case1, case2, case3, case4 } from "../config/lassoNode";
 
 
 let lasso: any;
@@ -18,6 +21,9 @@ let alphaDecay = 0.01;
 let linkStrength = 0.4;
 let linkDistance = 30
 let forceStore;
+let prevNodes = []
+let prevLinks = [];
+let evalMatrix = {}
 
 const getValidateId = (id: string) =>
   `id_${id.replaceAll("-", "").replaceAll(".", "")}`;
@@ -47,6 +53,7 @@ const init = (res) => {
     .attr("class", "circle_group")
     .append("circle")
     .attr("class", (d) => d.className || "circle")
+    .attr('id', d => `node_${d.mgmt_ip.replaceAll('.', '_')}`)
     .attr("fill", (d) => d.fill)
     .attr("r", 3.5)
     .attr("cx", 100)
@@ -85,6 +92,8 @@ const init = (res) => {
     .on('end', () => {
       // prevState
       console.log('------init end---------')
+      prevNodes = cloneDeep(res.nodes);
+      prevLinks = cloneDeep(res.links);
     });
 
   return force;
@@ -99,7 +108,9 @@ export const main = (
   collideAt: number,
   alphaMinAt: number,
   alphaDecayAt: number,
-  linkStrengthAt: number
+  linkStrengthAt: number,
+  algo: string,
+  controlChanged: boolean
 ) => {
   velocityDecay = velocityDecayAt;
   alpha = alphaAt;
@@ -110,7 +121,6 @@ export const main = (
   let force;
   let res = data;
   //expdata,筛选出与exp相关的节点
-  console.log(data);
 
   //  /**
   //   *   const expIp = "125.217.47.42";
@@ -166,8 +176,18 @@ export const main = (
     // Reset the style of the not selected dots
     lasso.items().classed("not_possible", false).classed("possible", false);
     // Style the selected dots
-    const selectedNodesItem = lasso.selectedItems(); //选择的DOM
+
+    // ! 根据ip来选择那些节点被聚合
+
+    // const selectedNodesItem = lasso.selectedItems(); //选择的DOM
+    const selectedNodesItem = d3.selectAll('circle').filter(d => {
+      return case1.includes(d?.mgmt_ip);
+    })
+
+
     const selectedNodesData = selectedNodesItem.data(); //选择的NodeData
+    console.log(selectedNodesData.map(d => d.mgmt_ip))
+
     const avgX = avg(selectedNodesData.map((d) => d.x));
     const avgY = avg(selectedNodesData.map((d) => d.y));
     let edges = container
@@ -474,7 +494,7 @@ export const main = (
     // nodeMobility({ nodes: res.nodes, adj }, 'age')
     // nodeMobility({ nodes: res.nodes, adj }, 'degree')
     // nodeMobility({ nodes: res.nodes, adj, links: res.links }, 'pin')
-    nodeMobility({ nodes: res.nodes, adj, links: res.links }, 'markov')
+    nodeMobility({ nodes: res.nodes, adj, links: res.links }, algo)
 
     force.force('custom', restrictForce(force))
 
@@ -513,14 +533,17 @@ export const main = (
     });
     force.on("end", function () {
       flag = true;
+      // ! 减量迭代结束
+      const evalMatrix = new CalcMatrix(prevNodes, prevLinks, res.nodes, res.links, linkDistance)
+      console.log(evalMatrix.getAllMatrix?.());
     });
     force.alpha(
       alpha
     );
     force.alphaMin(alphaMin);
     force.force("collide", d3.forceCollide(collide));
-    // force.velocityDecay(0.7);
-    // force.alphaDecay(0.01);
+    force.velocityDecay(0.7);
+    force.alphaDecay(0.01);
     // force.alphaMin(0);
     force.restart();
   };

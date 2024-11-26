@@ -35,6 +35,6 @@ export const ageMobility = (nodes, adj) => {
     })
     // ! 计算mobility
     nodes.forEach((node) => {
-        node.mobility = Math.pow(Math.E, node.age);
+        node.mobility = Math.pow(Math.E, -node.age);
     });
 }

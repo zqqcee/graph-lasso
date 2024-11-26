@@ -109,7 +109,6 @@ export const markovMobility = (nodes, adj, links) => {
     }
 
 
-    console.log(p)
     //4. 归一化
     const linear = scaleLinear()
         .domain([Math.min(...Object.values(p)), Math.max(...Object.values(p))])
@@ -117,5 +116,4 @@ export const markovMobility = (nodes, adj, links) => {
     nodes.forEach((node) => {
         node.mobility = linear(p[node.mgmt_ip]);
     });
-    console.log(nodes.map(d => d.mobility))
 }

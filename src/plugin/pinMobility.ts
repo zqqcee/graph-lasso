@@ -81,6 +81,7 @@ export const pinMobility = (nodes, adj, links) => {
 
 
     const dMax = disSet.length;
+    console.log(dMax, 'max')
     const dCutoff = 0.5 * dMax;
     disSet.forEach((d, i) => {
         if (i >= dCutoff) {
