@@ -14,13 +14,16 @@ def parse_graph_file(input_file, output_file):
             line = line.strip()
             if not line:
                 continue
+            if line.startswith('h'):
+                continue
             # 解析每一行，获取 source 和 target
             source, target = line.split()
-            if random.random() > 0.25:
+            if random.random() > 2:
                 continue;
             nodes_set.add(source)
             nodes_set.add(target)
-            links.append({"source": source, "target": target})
+            if random.random() > 0:
+                links.append({"source": source, "target": target})
 
     # 将节点集合转为列表，并为每个节点创建对象
     nodes = [{"id": node, "mgmt_ip":node} for node in nodes_set]
@@ -36,8 +39,11 @@ def parse_graph_file(input_file, output_file):
 
 
 # 输入和输出文件路径
-input_file = "data/osdata/Email Eu Core Network.txt"  # 输入的图数据文件路径
-output_file = "data/osdata-trans/case1.json"  # 输出的 JSON 文件路径
+# input_file = "data/osdata/Email Eu Core Network.txt"  # 输入的图数据文件路径
+# input_file = "data/osdata/Wikipedia Vote Network.txt"
+input_file = "data/osdata/dimacs10-netscience.txt"
+
+output_file = "data/osdata-trans/case3.json"  # 输出的 JSON 文件路径
 
 # 调用函数
 parse_graph_file(input_file, output_file)

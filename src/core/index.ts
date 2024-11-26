@@ -8,7 +8,8 @@ import { getAdjacentMatrix, getDegree } from "../plugin/common";
 import { restrictForce } from '../plugin/restrictForce'
 import { cloneDeep } from "lodash";
 import { CalcMatrix } from "../plugin/calcMatrix";
-import { case1, case2, case3, case4 } from "../config/lassoNode";
+import { case1, case2, case3, case4 } from "../config/lassoConfig/s1";
+import { s2case1 } from "../config/lassoConfig/s2";
 
 
 let lasso: any;
@@ -90,11 +91,11 @@ const init = (res) => {
         .attr("cy", (d) => d.y);
     })
     .on('end', () => {
-      // prevState
       console.log('------init end---------')
       prevNodes = cloneDeep(res.nodes);
       prevLinks = cloneDeep(res.links);
     });
+  force.alphaMin(0.01)
 
   return force;
 };
@@ -181,7 +182,7 @@ export const main = (
 
     // const selectedNodesItem = lasso.selectedItems(); //选择的DOM
     const selectedNodesItem = d3.selectAll('circle').filter(d => {
-      return case1.includes(d?.mgmt_ip);
+      return s2case1.includes(d?.mgmt_ip);
     })
 
 
@@ -448,8 +449,8 @@ export const main = (
         });
         force.velocityDecay(0.96);
         force.alpha(0.3).restart();
-        force.force("y", d3.forceY(500).strength(0.04));
-        force.force("x", d3.forceX(500).strength(0.04));
+        // force.force("y", d3.forceY(500).strength(0.04));
+        // force.force("x", d3.forceX(500).strength(0.04));
         force.force('custom', restrictForce(force))
 
 
@@ -487,15 +488,13 @@ export const main = (
     let count = 0;
     force.nodes(res.nodes);
     // force.force("link", d3.forceLink(res.links).strength(linkStrength));
-    force.force("collide", d3.forceCollide(collide));
-
+    // force.force("collide", d3.forceCollide(collide));
     // !计算 mobility 传入force中
     const adj = getAdjacentMatrix(res.links)
     // nodeMobility({ nodes: res.nodes, adj }, 'age')
     // nodeMobility({ nodes: res.nodes, adj }, 'degree')
     // nodeMobility({ nodes: res.nodes, adj, links: res.links }, 'pin')
     nodeMobility({ nodes: res.nodes, adj, links: res.links }, algo)
-
     force.force('custom', restrictForce(force))
 
 

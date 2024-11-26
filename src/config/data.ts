@@ -4,6 +4,8 @@ import connectionData from "../../data/network/only-correspondlinks.json";
 import largeData from "../../data/network/pluslinks.json";
 import bigData from "../../data/network/bigdata.json";
 import emailData from '../../data/osdata-trans/case1.json';
+import voteData from '../../data/osdata-trans/case2.json';
+import socialData from '../../data/osdata-trans/case3.json';
 import { getDescription } from "./utils";
 
 export const dataOptions = [
@@ -41,7 +43,19 @@ export const dataOptions = [
     data: emailData,
     key: "emailData",
     label: "邮箱",
-    discription: getDescription(bigData),
+    discription: getDescription(emailData),
+  },
+  {
+    data: voteData,
+    key: "voteData",
+    label: "who votes whom",
+    discription: getDescription(voteData),
+  },
+  {
+    data: socialData,
+    key: "socialData",
+    label: "co-authorships",
+    discription: getDescription(socialData),
   },
 ];
 
@@ -51,5 +65,7 @@ export const DataMap: { [key: string]: { nodes: any[]; links: any[] } } = {
   largeData: largeData,
   connectionData: connectionData,
   bigData: bigData,
-  emailData: emailData
+  emailData: emailData,
+  voteData: voteData,
+  socialData: socialData
 };
