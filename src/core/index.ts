@@ -9,7 +9,8 @@ import { restrictForce } from '../plugin/restrictForce'
 import { cloneDeep } from "lodash";
 import { CalcMatrix } from "../plugin/calcMatrix";
 import { case1, case2, case3, case4 } from "../config/lassoConfig/s1";
-import { s2case1 } from "../config/lassoConfig/s2";
+import { s2case1, s2case2 } from "../config/lassoConfig/s2";
+import { s3case1 } from "../config/lassoConfig/s3";
 
 
 let lasso: any;
@@ -25,6 +26,7 @@ let forceStore;
 let prevNodes = []
 let prevLinks = [];
 let evalMatrix = {}
+let lassoendRef = () => { }
 
 const getValidateId = (id: string) =>
   `id_${id.replaceAll("-", "").replaceAll(".", "")}`;
@@ -94,6 +96,7 @@ const init = (res) => {
       console.log('------init end---------')
       prevNodes = cloneDeep(res.nodes);
       prevLinks = cloneDeep(res.links);
+      lassoendRef()
     });
   force.alphaMin(0.01)
 
@@ -182,7 +185,7 @@ export const main = (
 
     // const selectedNodesItem = lasso.selectedItems(); //选择的DOM
     const selectedNodesItem = d3.selectAll('circle').filter(d => {
-      return s2case1.includes(d?.mgmt_ip);
+      return case4.includes(d?.mgmt_ip);
     })
 
 
@@ -446,8 +449,12 @@ export const main = (
         });
         force.on("end", function () {
           flag = true;
+          console.log('--------------expand')
+          const evalMatrix = new CalcMatrix(prevNodes, prevLinks, res.nodes, res.links, linkDistance)
+          console.log(evalMatrix.getAllMatrix?.());
         });
-        force.velocityDecay(0.96);
+
+        force.velocityDecay(0.8);
         force.alpha(0.3).restart();
         // force.force("y", d3.forceY(500).strength(0.04));
         // force.force("x", d3.forceX(500).strength(0.04));
@@ -455,11 +462,11 @@ export const main = (
 
 
         // 添加震荡
-        setTimeout(() => {
-          force.alphaMin(0.1);
-          force.velocityDecay(0.93);
-          force.alpha(0.5).restart();
-        }, 1000);
+        // setTimeout(() => {
+        //   force.alphaMin(0.1);
+        //   force.velocityDecay(0.93);
+        //   force.alpha(0.5).restart();
+        // }, 1000);
 
         lasso = d3
           .lasso()
@@ -546,6 +553,7 @@ export const main = (
     // force.alphaMin(0);
     force.restart();
   };
+  lassoendRef = lasso_end
 
   lasso = d3
     .lasso()
