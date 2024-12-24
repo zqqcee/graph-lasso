@@ -4,6 +4,7 @@ export const restrictForce = (force) => {
     nodes.forEach((node) => {
         if (node.mobility) {
             node.x += node.mobility * node.vx;
+            node.y += node.mobility * node.vy;
         }
     });
 }

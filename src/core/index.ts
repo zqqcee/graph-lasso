@@ -183,10 +183,10 @@ export const main = (
 
     // ! 根据ip来选择那些节点被聚合
 
-    // const selectedNodesItem = lasso.selectedItems(); //选择的DOM
-    const selectedNodesItem = d3.selectAll('circle').filter(d => {
-      return case4.includes(d?.mgmt_ip);
-    })
+    const selectedNodesItem = lasso.selectedItems(); //选择的DOM
+    // const selectedNodesItem = d3.selectAll('circle').filter(d => {
+    //   return case4.includes(d?.mgmt_ip);
+    // })
 
 
     const selectedNodesData = selectedNodesItem.data(); //选择的NodeData
@@ -454,7 +454,7 @@ export const main = (
           console.log(evalMatrix.getAllMatrix?.());
         });
 
-        force.velocityDecay(0.8);
+        force.velocityDecay(0.99);
         force.alpha(0.3).restart();
         // force.force("y", d3.forceY(500).strength(0.04));
         // force.force("x", d3.forceX(500).strength(0.04));
@@ -462,11 +462,11 @@ export const main = (
 
 
         // 添加震荡
-        // setTimeout(() => {
-        //   force.alphaMin(0.1);
-        //   force.velocityDecay(0.93);
-        //   force.alpha(0.5).restart();
-        // }, 1000);
+        setTimeout(() => {
+          force.alphaMin(0.1);
+          force.velocityDecay(0.93);
+          force.alpha(0.5).restart();
+        }, 1000);
 
         lasso = d3
           .lasso()
