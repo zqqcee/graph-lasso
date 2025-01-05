@@ -12,7 +12,7 @@ import { case1, case2, case3, case4 } from "../config/lassoConfig/s1";
 import { s2case1, s2case2 } from "../config/lassoConfig/s2";
 import { s3case1 } from "../config/lassoConfig/s3";
 
-
+const threshold = 20; //1 独立连通子图，2 游离节点， 3 一度邻居 4 二度邻居
 let lasso: any;
 let flag = true;//标记是否可展开
 let velocityDecay = 0.7;
@@ -183,12 +183,13 @@ export const main = (
 
     // ! 根据ip来选择那些节点被聚合
 
-    const selectedNodesItem = lasso.selectedItems(); //选择的DOM
-    // const selectedNodesItem = d3.selectAll('circle').filter(d => {
-    //   return case4.includes(d?.mgmt_ip);
-    // })
+    // const selectedNodesItem = lasso.selectedItems(); //选择的DOM
+    const selectedNodesItem = d3.selectAll('circle').filter(d => {
+      return case4.includes(d?.mgmt_ip);
+    })
 
 
+    //TODO-1.5: 这里是要聚合的节点
     const selectedNodesData = selectedNodesItem.data(); //选择的NodeData
     console.log(selectedNodesData.map(d => d.mgmt_ip))
 
