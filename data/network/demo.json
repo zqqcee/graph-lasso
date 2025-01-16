@@ -3317,9 +3317,419 @@
       "type": "交换机",
       "role": "core",
       "mgmt_ip": "124.206.24.12"
+    },
+    {
+      "mgmt_ip": "1",
+      "class": "new-circle",
+      "fill": "blue",
+      "children": [
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.1"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.2"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.3"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.4"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.5"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.6"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.7"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.8"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.9"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.10"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.11"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.12"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.13"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.14"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.15"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.16"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.17"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.18"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.19"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "1.20"
+        }
+      ],
+      "childrenStoreLinks": [
+        {
+          "source": "1",
+          "target": "1.1",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1",
+          "target": "1.2",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1",
+          "target": "1.3",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1.4",
+          "target": "1.3",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1.5",
+          "target": "1.3",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1.6",
+          "target": "1.7",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1.6",
+          "target": "1.8",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1.6",
+          "target": "1.9",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1.6",
+          "target": "1.10",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1.11",
+          "target": "1.10",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1.12",
+          "target": "1.10",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1.13",
+          "target": "1.10",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "1.14",
+          "target": "1.10",
+          "src_port": "---",
+          "dst_port": "---"
+        }
+      ],
+      "childrenEditLinks":[
+        {
+          "source": "1",
+          "target": "2",
+          "src_port": "---",
+          "dst_port": "---"
+        }
+      ]
+    },
+    {
+      "mgmt_ip": "2",
+      "class": "new-circle",
+      "fill": "blue",
+      "children":[
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "2"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "2.1"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "2.2"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "2.3"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "2.4"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "2.5"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "2.6"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "2.7"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "2.8"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "2.9"
+        },
+        {
+          "az": "可用区1",
+          "pod_name": "pod19",
+          "type": "交换机",
+          "role": "SPINE",
+          "mgmt_ip": "2.10"
+        }
+      ],
+      "childrenStoreLinks": [
+        {
+          "source": "2",
+          "target": "2.1",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "2",
+          "target": "2.2",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "2",
+          "target": "2.3",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "2",
+          "target": "2.4",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "2",
+          "target": "2.5",
+          "src_port": "---",
+          "dst_port": "---"
+        }
+      ],
+      "childrenEditLinks":[
+        {
+          "source": "1",
+          "target": "2",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "3",
+          "target": "2",
+          "src_port": "---",
+          "dst_port": "---"
+        },
+        {
+          "source": "4",
+          "target": "2",
+          "src_port": "---",
+          "dst_port": "---"
+        }
+      ]
+    },
+    {
+      "az": "可用区7",
+      "pod_name": "cnt",
+      "type": "交换机",
+      "role": "core",
+      "mgmt_ip": "3"
+    },
+    {
+      "az": "可用区7",
+      "pod_name": "cnt",
+      "type": "交换机",
+      "role": "core",
+      "mgmt_ip": "4"
     }
   ],
   "links": [
+    {
+      "source": "1",
+      "target": "2",
+      "src_port": "---",
+      "dst_port": "---"
+    },
+    {
+      "source": "3",
+      "target": "2",
+      "src_port": "---",
+      "dst_port": "---"
+    },
+    {
+      "source": "4",
+      "target": "2",
+      "src_port": "---",
+      "dst_port": "---"
+    },
     {
       "source": "124.183.191.224",
       "target": "124.183.177.2",
