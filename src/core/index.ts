@@ -35,6 +35,63 @@ const avg = (arr: any[]) =>
   Math.floor(arr?.reduce((p, c) => p + c) / arr.length);
 
 /**
+ * 使用迪杰斯特拉算法计算两点之间的最短路径
+ * @param startNode 起始节点
+ * @param endNode 终点节点
+ * @param nodes 所有节点
+ * @param links 所有连边
+ * @returns 包含最短路径节点数组和路径长度的对象
+ */
+function calculateShortestPath(startNode, endNode, nodes, links) {
+  const distances = {};
+  const previousNodes = {};
+  const unvisitedNodes = new Set(nodes.map(node => node.mgmt_ip));
+
+  // 初始化距离和前驱节点
+  nodes.forEach(node => {
+    distances[node.mgmt_ip] = Infinity;
+    previousNodes[node.mgmt_ip] = null;
+  });
+  distances[startNode.mgmt_ip] = 0;
+
+  while (unvisitedNodes.size > 0) {
+    // 找到距离起始节点最近的未访问节点
+    const currentNode = Array.from(unvisitedNodes).reduce((closestNode, nodeId) => {
+      return distances[nodeId] < distances[closestNode] ? nodeId : closestNode;
+    }, Array.from(unvisitedNodes)[0]);
+
+    if (currentNode === endNode.mgmt_ip) {
+      // 构建最短路径
+      const path = [];
+      let current = endNode.mgmt_ip;
+      while (current) {
+        path.unshift(current);
+        current = previousNodes[current];
+      }
+      return { path: path, length: distances[endNode.mgmt_ip] };
+    }
+
+    unvisitedNodes.delete(currentNode);
+
+    // 更新邻居节点的距离
+    links.forEach(link => {
+      if (link.source.mgmt_ip === currentNode || link.target.mgmt_ip === currentNode) {
+        const neighbor = link.source.mgmt_ip === currentNode ? link.target.mgmt_ip : link.source.mgmt_ip;
+        if (unvisitedNodes.has(neighbor)) {
+          const newDistance = distances[currentNode] + 1; // 假设每条边的权重为1
+          if (newDistance < distances[neighbor]) {
+            distances[neighbor] = newDistance;
+            previousNodes[neighbor] = currentNode;
+          }
+        }
+      }
+    });
+  }
+
+  return { path: [], length: Infinity }; // 如果没有路径，返回路径长度为无限长
+}
+
+/**
  * 封装节点聚合和节点收缩
  * @param res 
  * @param selectedNodesItem 
@@ -278,6 +335,7 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
       // .attr("d", (d) => {
       //   return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
       // });
+      // 执行迪杰斯特拉算法计算最短路径长度
 
       nodeSelection
         .data(res.nodes, (d) => d.mgmt_ip)
@@ -375,7 +433,10 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
         newNodeCoordinates.push({ x: cx, y: cy });
       }
     });
-
+    res.nodes.forEach(d =>{
+      d.shortPath = calculateShortestPath(d,newNode,res.nodes,res.links)?.length;
+      console.log("---"+d.shortPath+"---");
+    })
   let count = 0;
   force.nodes(res.nodes);
   // force.force("link", d3.forceLink(res.links).strength(linkStrength));
@@ -436,6 +497,7 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
   force.alphaDecay(0.01);
   // force.alphaMin(0);
   force.restart();
+  
 }
 const init = (res) => {
   const svg = d3.select("#viewport").attr("height", 1000).attr("width", 1000);
@@ -788,7 +850,11 @@ export const main = (
       .on("end", lasso_end);
     svg.call(lasso);
     svg.call(zoom);
-
+    const tempNode=res.nodes.find(n => n.mgmt_ip === data.mgmt_ip)
+    res.nodes.forEach(d =>{
+      d.shortPath = calculateShortestPath(d,tempNode,res.nodes,res.links)?.length;
+      console.log("---"+d.shortPath);
+    })
   });
   lasso = d3
     .lasso()
