@@ -69,3 +69,13 @@ export const DataMap: { [key: string]: { nodes: any[]; links: any[] } } = {
   voteData: voteData,
   socialData: socialData
 };
+export const DataKeys: {[key: string]: string} = {
+  midData: "../../data/network/demo.json",
+  smallData: "../../data/network/less-links.json",
+  largeData: "../../data/network/pluslinks.json",
+  connectionData: "../../data/network/only-correspondlinks.json",
+  bigData: "../../data/network/bigdata.json",
+  emailData: '../../data/osdata-trans/case1.json',
+  voteData: '../../data/osdata-trans/case2.json',
+  socialData: '../../data/osdata-trans/case3.json'
+}

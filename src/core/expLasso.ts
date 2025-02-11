@@ -7,7 +7,7 @@ import { s2case1, s2case2 } from "../config/lassoConfig/s2";
 import { s3case1 } from "../config/lassoConfig/s3";
 import { link } from "fs";
 let lasso: any;
-let selectCase:[];
+let selectCase: [];
 let flag = true;//标记是否可展开
 let velocityDecay = 0.7;
 let alpha = 0.5;
@@ -268,12 +268,6 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start,
         .attr("d", (d) => {
           return `M ${data.x} ${data.y} L ${data.x} ${data.y}`;
         });
-      // .transition()
-      // .duration(500)
-      // .attr("d", (d) => {
-      //   return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
-      // });
-      // 执行迪杰斯特拉算法计算最短路径长度
 
       nodeSelection
         .data(res.nodes, (d) => d.mgmt_ip)
@@ -427,7 +421,23 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start,
   force.restart();
 
 }
-const rightInit = (res) => {
+const rightInit = (rightres,datacase,eflag) => {
+  let res = cloneDeep(rightres);
+  if(!eflag){
+    let temp = res.nodes.filter(d => {
+      return d.mgmt_ip === datacase[0];
+    });
+    res.nodes = rightres.nodes.filter(d => {
+      return !datacase.includes(d.mgmt_ip);
+    });
+    
+    console.log(temp[0].children)
+    res.nodes = [...res.nodes,...temp[0].children];
+    res.links = rightres.links.filter(d => {
+      return d.source.mgmt_ip !== temp[0].mgmt_ip && d.target.mgmt_ip !== temp[0].mgmt_ip;
+    });
+    res.links = [...res.links,...temp[0].childrenStoreLinks,...temp[0].childrenEditLinks];
+  }
   const rightSvg = d3.select("#top-right-svg").attr("height", 375);
   rightSvg.selectAll("*").remove();
   const rightContainer = rightSvg.append("g").attr("id", "right-container").attr("height", 375).attr("width", 500).attr("transform", "scale(0.5)");
@@ -492,8 +502,8 @@ const rightInit = (res) => {
 
   return force;
 }
-const init = (res,datacase) => {
-  const svg = d3.select("#exp-viewport").attr("height", 750).attr("width", 750).attr("border","1px solid black");
+const init = (res) => {
+  const svg = d3.select("#exp-viewport").attr("height", 750).attr("width", 750).attr("border", "1px solid black");
   svg.selectAll("*").remove();
   const container = svg.append("g").attr("id", "container").attr("height", 500).attr("width", 500).attr("transform", "scale(0.9)");
 
@@ -552,7 +562,7 @@ const init = (res,datacase) => {
     })
     .on('end', () => {
       console.log('------init end---------')
-      
+
       prevNodes = cloneDeep(res.nodes);
       prevLinks = cloneDeep(res.links);
       lassoendRef()
@@ -561,13 +571,23 @@ const init = (res,datacase) => {
 
   return force;
 };
-export const main = (data: { nodes: any[]; links: any[] }, datacase:string[]) => {
+export const main = (data: { nodes: any[]; links: any[] }, datacase: string[], exflag: boolean) => {
   let force;
+  let rightforce;
   let res = data;
   let rightres = cloneDeep(data);
+  let temp;
+  let children = [];
+  if(!exflag){
+    console.log(datacase)
+    temp = data.nodes.filter(d => {
+      return d.mgmt_ip === datacase[0];
+    })[0];
+    children = temp.children.map(d => d.mgmt_ip)
+  }
   res.links = res.links.map((l, id) => ({ ...l, id }));
   force = init(res);
-  let rightforce = rightInit(rightres);
+    rightforce = rightInit(rightres,datacase,exflag);
   forceStore = force;
   let zoom = d3.zoom().scaleExtent([0.1, 5]).on("zoom", zoomed);
 
@@ -616,35 +636,187 @@ export const main = (data: { nodes: any[]; links: any[] }, datacase:string[]) =>
     lasso.items().classed("not_possible", false).classed("possible", false);
     const selectedNodesItem = lasso.selectedItems(); //选择的DOM
     const selectedNodesData = selectedNodesItem.data(); //选择的节点数据
-    let count=0;
-    for (let i = 0; i < selectedNodesData.length; i++) {
-      for(let j=0; j<selectCase.length; j++){
-        if(selectedNodesData[i].mgmt_ip === selectCase[j].mgmt_ip){
-          count++;
+    let count = 0;
+    if(exflag){
+      for (let i = 0; i < selectedNodesData.length; i++) {
+        for (let j = 0; j < datacase.length; j++) {
+          if (selectedNodesData[i].mgmt_ip === datacase[j]) {
+            count++;
+          }
         }
       }
+      d3.select("#right-container").selectAll("text").remove();
+      d3.select("#right-container").append("text").attr("id","accuracy").text(`准确率：${(1-(datacase.length - count+selectedNodesData.length-count) / rightres.nodes.length) * 100}%`).attr("x", 10).attr("y", 40).attr("font-size", "20px")
+      d3.select("#right-container").append("text").attr("id","precision").text(`精确率：${count / selectedNodesData.length * 100}%`).attr("x", 10).attr("y", 80).attr("font-size", "20px")
+      d3.select("#right-container").append("text").attr("id","recall").text(`召回率：${count / datacase.length * 100}%`).attr("x", 10).attr("y", 120).attr("font-size", "20px")
+    }else{
+      let len = temp.children.length;
+      console.log(selectedNodesData,children)
+      for (let i = 0; i < selectedNodesData.length; i++) {
+        for (let j = 0; j < len; j++) {
+          if (selectedNodesData[i].mgmt_ip === children[j]) {
+            count++;
+          }
+        }
+      }
+      d3.select("#right-container").selectAll("text").remove();
+      d3.select("#right-container").append("text").attr("id","accuracy").text(`准确率：${(1-(len - count+selectedNodesData.length-count) / rightres.nodes.length) * 100}%`).attr("x", 10).attr("y", 40).attr("font-size", "20px")
+      d3.select("#right-container").append("text").attr("id","precision").text(`精确率：${count / selectedNodesData.length * 100}%`).attr("x", 10).attr("y", 80).attr("font-size", "20px")
+      d3.select("#right-container").append("text").attr("id","recall").text(`召回率：${count / len * 100}%`).attr("x", 10).attr("y", 120).attr("font-size", "20px")
     }
-    d3.select("#right-container").selectAll("text").remove();
-    d3.select("#right-container").append("text").text(`准确率：${count/selectCase.length*100}%`).attr("x", 10).attr("y", 40).attr("font-size", "20px")
-    console.log(`准确率：${count/selectCase.length*100}%`);
+    
   }
   lassoendRef = lasso_end
-  
+
   d3.select("#button").on("click", () => {
-      const endTime = Date.now(); // 记录结束时间
-      const timeDifference = endTime - startTime; // 计算时间差
-      d3.select("#exp-viewport").selectAll("text").remove();
-      d3.select("#exp-viewport").append("text").text(`用户反应时间: ${timeDifference} ms`).attr("x", 10).attr("y", 40).attr("font-size", "20px");
-      console.log(`用户反应时间: ${timeDifference} ms`);
+    const endTime = Date.now(); // 记录结束时间
+    const timeDifference = endTime - startTime; // 计算时间差
+    d3.select("#exp-viewport").selectAll("text").remove();
+    d3.select("#exp-viewport").append("text").text(`用户反应时间: ${timeDifference} ms`).attr("x", 10).attr("y", 40).attr("font-size", "20px");
+    console.log(`用户反应时间: ${timeDifference} ms`);
   });
   force.on("end", function () {
     // 第一次点击
     startTime = Date.now(); // 记录开始时间
-    const selectedNodesItem = container.selectAll('circle').filter(d => {
-      return datacase.includes(d?.mgmt_ip);
-    });
-    selectCase = selectedNodesItem.data();
-    handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start, lasso_draw, lasso_end);
+    if (exflag) {
+      const selectedNodesItem = container.selectAll('circle').filter(d => {
+        return datacase.includes(d?.mgmt_ip);
+      });
+      selectCase = selectedNodesItem.data();
+      handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start, lasso_draw, lasso_end);
+    } else {
+      for (let i = 0; i < datacase.length; i++) {
+        const newdata = container.selectAll('.new-circle').filter(d => {
+          return datacase.includes(d?.mgmt_ip);
+        }).data()[0];
+        console.log(newdata)
+        let linkUpdate = res.links.filter((e) => {
+          return e.source.mgmt_ip === newdata.mgmt_ip || e.target.mgmt_ip === newdata.mgmt_ip;
+        });
+        const svg = d3.select("#viewport");
+        res.nodes = res.nodes.filter((n) => n.mgmt_ip !== newdata.mgmt_ip)
+
+        container.selectAll(".new-circle").filter(d => {
+          return datacase.includes(d?.mgmt_ip);
+        }).remove();
+        // 处理节点的进入、更新、退出
+        let nodeSelection = container
+          .selectAll(".circle_group")
+          .data(res.nodes, (d) => d.mgmt_ip);
+
+        // ! 修改 mobility
+        // ! 先重置
+        res.nodes.forEach(d => {
+          d.changed = 0
+          d.isNew = 0
+        })
+        res.nodes = [
+          ...res.nodes,
+          ...newdata.children.map((d) => ({ ...d, x: newdata.x, y: newdata.y, changed: 1, isNew: 1 })) //! 标记新节点 
+        ];
+        for (let i = 0; i < linkUpdate.length; i++) {
+          let link = linkUpdate[i];
+          // ! 与新节点有连边的旧节点，changed改为1
+          link.source.changed = 1
+          link.target.changed = 1
+          if (link.source.mgmt_ip === newdata.mgmt_ip) {
+            link.source = res.nodes.find(
+              (n) => n.mgmt_ip === newdata.mgmt_ip
+            );
+          }
+          if (link.target.mgmt_ip === newdata.mgmt_ip) {
+            link.target = res.nodes.find(
+              (n) => n.mgmt_ip === newdata.mgmt_ip
+            );
+          }
+        }
+        console.log(res.links)
+        res.links = res.links.filter((e) => {
+          return !newdata.childrenEditLinks.includes(e);
+        });
+        container
+          .selectAll(".edges_group")
+          .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
+          .exit()
+          .remove();
+        res.links = [...res.links, ...linkUpdate, ...newdata.childrenStoreLinks.map((d) => {
+          const source = res.nodes.find(
+            (n) => n.mgmt_ip === d.source
+          );
+          const target = res.nodes.find(
+            (n) => n.mgmt_ip === d.target
+          );
+          source.x = newdata.x;
+          source.y = newdata.y;
+          target.x = newdata.x;
+          target.y = newdata.y;
+          return { ...d, source, target };
+        })];
+        container
+          .selectAll(".edges_group")
+          .data(res.links)
+          // .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
+          .enter()
+          .append("g")
+          .attr("class", "edges_group")
+          .attr("id", (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
+          .append("path")
+          .attr("class", "edge")
+          .attr("stroke", "#caadad")
+          .attr("stroke-width", 0.5)
+          .attr("d", (d) => {
+            return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+          });
+
+        nodeSelection
+          .data(res.nodes, (d) => d.mgmt_ip)
+          .enter()
+          .append("g")
+          .attr("class", "circle_group")
+          .append("circle")
+          .attr("id", d => `node_${d.mgmt_ip.replaceAll('.', '_')}`)
+          .attr("fill", "black")
+          .attr("class", "circle")
+          .attr("r", 3.5)
+          .attr("cx", newdata.x)
+          .attr("cy", newdata.y)
+          
+
+        force.nodes(res.nodes);
+        // force.force("link", d3.forceLink(res.links).strength(linkStrength));
+        // force.force("collide", null);
+        force.on("tick", () => {
+          d3.selectAll(".circle")
+            .attr("cx", (d) => d.x)
+            .attr("cy", (d) => d.y);
+          container.selectAll(".edge").attr("d", (d) => {
+            return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+          });
+          d3.selectAll(".new-circle")
+            .attr("cx", (d) => d.x)
+            .attr("cy", (d) => d.y);
+          flag = false;
+          // force.stop();
+        });
+        force.on("end", function () {
+          flag = true;
+        });
+
+        force.velocityDecay(0.99);
+        force.alpha(0.3).restart();
+        // force.force("y", d3.forceY(500).strength(0.04));
+        // force.force("x", d3.forceX(500).strength(0.04));
+
+
+        // 添加震荡
+        setTimeout(() => {
+          force.alphaMin(0.1);
+          force.velocityDecay(0.93);
+          force.alpha(0.5).restart();
+        }, 1000);
+      }
+    }
+
   })
   lasso = d3
     .lasso()
@@ -655,5 +827,5 @@ export const main = (data: { nodes: any[]; links: any[] }, datacase:string[]) =>
     .on("start", lasso_start)
     .on("draw", lasso_draw)
     .on("end", right_lasso_end);
-    d3.select("#top-right-svg").call(lasso);
+  d3.select("#top-right-svg").call(lasso);
 }

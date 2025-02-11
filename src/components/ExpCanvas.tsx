@@ -1,10 +1,11 @@
+import * as d3 from "d3";
 import styled from "styled-components";
 import React, { useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import { main } from "../core/expLasso";
 import { algoAtom, dataNameAtom } from "../store";
-import { DataMap } from "../config/data";
-import { cloneDeep } from "lodash";
+import { DataMap, DataKeys } from "../config/data";
+import { cloneDeep, set } from "lodash";
 import { Radio, Button } from '@arco-design/web-react';
 import { case1, case2, case3, case4 } from "../config/lassoConfig/s1";
 
@@ -44,34 +45,57 @@ const BottomButton = styled(Button)`
 `;
 
 const asset = { case1, case2, case3, case4 };
+const asset2 = [["5"], ["6"],["1"],["2"]];
 
 function ExpCanvas() {
   const [dataName] = useAtom<string>(dataNameAtom);
   const [currentCase, setCurrentCase] = useState<string[]>(asset.case4);
   const [animationBeauty, setAnimationBeauty] = useState<string>('a'); // 新增：用于跟踪动画美观度的选择
   const [layoutBeauty, setLayoutBeauty] = useState<string>('a'); // 新增：用于跟踪布局美观度的选择
+  const [flag, setFlag] = useState<boolean>(true);
+  const [index,setIndex] = useState<number>(0);
+
 
   const handleNextClick = () => {
-    const currentIndex = Object.values(asset).indexOf(currentCase);
-    const nextIndex = (currentIndex + 1) % Object.values(asset).length;
-    setCurrentCase(Object.values(asset)[nextIndex]);
-
+    const randomValue = Math.floor(Math.random() * 2);
+    if (randomValue === 0) {
+      setFlag(true);
+      const currentIndex = Object.values(asset).indexOf(currentCase);
+      const nextIndex = (currentIndex + 1) % Object.values(asset).length;
+      setCurrentCase(Object.values(asset)[nextIndex]);
+    } else {
+      setFlag(false);
+      const nextIndex = (index + 1) % asset2.length;
+      setCurrentCase(asset2[nextIndex]);
+      setIndex(nextIndex);
+    }
     // 重置选择
     setAnimationBeauty('a');
     setLayoutBeauty('a');
 
     // 打印当前的选择
-    console.log('动画美观度:', animationBeauty);
-    console.log('布局美观度:', layoutBeauty);
+    const logObject = {
+      '动画美观度': animationBeauty,
+      '布局美观度': layoutBeauty,
+      '数据': DataKeys[dataName],
+      '当前案例': currentCase,
+      '状态': flag ? "assemble" : "expand",
+      '用户反应时间': d3.select("#exp-viewport").select("text").text().substring(7,14),
+      '准确性': d3.select("#top-right-svg").select("#accuracy").text().substring(4,),
+      '精确率': d3.select("#top-right-svg").select("#precision").text().substring(4,)
+    };
+    
+    console.log(logObject);
   };
 
   React.useLayoutEffect(() => {
     main(
       cloneDeep(DataMap[dataName]),
       currentCase,
+      flag,
     );
     // initRef.current = false;
-  }, [dataName, currentCase]);
+  }, [dataName, currentCase,flag]);
 
   return (
     <Wrapper>

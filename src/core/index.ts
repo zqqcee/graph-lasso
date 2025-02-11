@@ -730,7 +730,6 @@ export const main = (
     res.links = res.links.filter((e) => {
       return !data.childrenEditLinks.includes(e);
     });
-    console.log(res.links)
     container
       .selectAll(".edges_group")
       .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
