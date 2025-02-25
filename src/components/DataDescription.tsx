@@ -18,6 +18,10 @@ function DataDescription({ dataName }: { dataName: string }) {
       value: description?.free,
     },
     {
+      label: "平均聚类系数",
+      value: description?.averageClustering,
+    },
+    {
       label: "连通分量个数",
       value: description?.connection,
     },

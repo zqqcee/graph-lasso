@@ -11,14 +11,13 @@ import socialData from '../../data/osdata-trans/case3.json';
 // import con_twitter from "../../data/expdata/con_twitter.json";
 // import dimacs10 from "../../data/expdata/dimacs10.json";
 // import email_eu_core from "../../data/expdata/email_eu_core.json";
-// import wiki_votes from "../../data/expdata/wiki_votes.json";
+import wiki_votes from "../../data/expdata/wiki_votes.json";
 import * as flatted from 'flatted';
 import { data as con_twitter_txt } from '../../data/expdata/con_twitter';
 import { data as cloud180_txt } from "../../data/expdata/cloud180";
 import { data as cloud2160_txt } from "../../data/expdata/cloud2160";
 import { data as email_eu_core_txt } from "../../data/expdata/email_eu_core";
 import { data as dimacs10_txt } from "../../data/expdata/dimacs10";
-import { data as wiki_votes_txt } from "../../data/expdata/wiki_votes";
 import { getDescription } from "./utils";
 import { promises as fs } from 'fs';
 
@@ -27,7 +26,6 @@ const cloud180 = flatted.parse(cloud180_txt);
 const cloud2160 = flatted.parse(cloud2160_txt);
 const email_eu_core = flatted.parse(email_eu_core_txt);
 const dimacs10 = flatted.parse(dimacs10_txt);
-const wiki_votes = flatted.parse(wiki_votes_txt);
 export const dataOptions = [
   {
     data: con_twitter,

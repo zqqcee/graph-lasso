@@ -2,7 +2,9 @@
   fill-opacity: 1;
   stroke: #b48b8b;
   stroke-width: 1;
-  fill: #def3dd;
+  fill: #3D5AA9;
+  /* fill:#DCF3D8;  */
+  /* 在截增量的图的时，把最后一行注释掉 */
 }
 .lasso path {
   stroke: rgb(80, 80, 80);

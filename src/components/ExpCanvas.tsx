@@ -7,7 +7,7 @@ import { algoAtom, dataNameAtom } from "../store";
 import { DataMap, DataKeys } from "../config/data";
 import { cloneDeep, set } from "lodash";
 import { Radio, Button } from '@arco-design/web-react';
-import { case1, case2, case3, case4 } from "../config/lassoConfig/s1";
+import { case1, case2, case3, case4 } from "../config/lassoConfig/con_twitter";
 
 const RadioGroup = Radio.Group;
 const Wrapper = styled.div`
@@ -28,10 +28,12 @@ const RightContainer = styled.div`
   flex-direction: column;
   flex: 1;
   position: relative;
+  border-bottom: 1px solid black;
 `;
 
 const TopRightSVG = styled.svg`
   border: 1px solid black;
+  border-left:none;
 `;
 
 const BottomRadioGroup = styled(RadioGroup)`
@@ -44,15 +46,20 @@ const BottomButton = styled(Button)`
   bottom: 10px;
 `;
 
-const asset = { case1, case2, case3, case4 };
-const asset2 = [["5"], ["6"],["1"],["2"]];
+const asset = { case1, case2, case3, case4 }; // 要收缩的节点 4个case
+const asset2 = [
+  ["5978a778-5350-41e4-b80e-11a696549c51"],
+  ["2fa5b9c5-99fb-4528-9428-1de2d1cffdf3"],
+  ["6a4388cf-2554-46f2-82b3-6ee032f5ff58"],
+  ["39267bfe-6346-492e-af28-c589d1628845"]
+]; //要展开节点的id
 
 function ExpCanvas() {
   const [dataName] = useAtom<string>(dataNameAtom);
-  const [currentCase, setCurrentCase] = useState<string[]>(asset.case4);
+  const [currentCase, setCurrentCase] = useState<string[]>(asset2[0]);
   const [animationBeauty, setAnimationBeauty] = useState<string>('a'); // 新增：用于跟踪动画美观度的选择
   const [layoutBeauty, setLayoutBeauty] = useState<string>('a'); // 新增：用于跟踪布局美观度的选择
-  const [flag, setFlag] = useState<boolean>(true);
+  const [flag, setFlag] = useState<boolean>(false); //flag true时
   const [index,setIndex] = useState<number>(0);
 
 

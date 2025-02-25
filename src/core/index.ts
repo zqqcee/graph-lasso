@@ -7,8 +7,9 @@ import * as d3 from "d3";
 import { getAdjacentMatrix, getDegree } from "../plugin/common";
 import { restrictForce } from '../plugin/restrictForce'
 import { cloneDeep, update } from "lodash";
+import * as flatted from 'flatted';
 import { CalcMatrix } from "../plugin/calcMatrix";
-import { case1, case2, case3, case4 } from "../config/lassoConfig/s1";
+import { case1, case2, case3, case4 } from "../config/lassoConfig/con_twitter";
 import { s2case1, s2case2 } from "../config/lassoConfig/s2";
 import { s3case1 } from "../config/lassoConfig/s3";
 import { link } from "fs";
@@ -103,10 +104,10 @@ function calculateShortestPath(startNode, endNode, nodes, links) {
  * @param lasso_end 
  */
 function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end) {
+
   const container = d3.select("#container");
   //TODO-1.5: 这里是要聚合的节点
   const selectedNodesData = [...new Map(selectedNodesItem.data().map(item => [item.mgmt_ip, item])).values()]; //选择的NodeData
-  console.log(selectedNodesData.map(d => d.mgmt_ip))
 
   const avgX = avg(selectedNodesData.map((d) => d.x));
   const avgY = avg(selectedNodesData.map((d) => d.y));
@@ -129,6 +130,7 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
   //需要删除的连边，后续需要复原
   const needToDelEdgesData = needToDelEdges.data();
   const needToDelEdgesDataIds = needToDelEdgesData.map((d) => d.id);
+
   res.links = res.links.filter((e) => !needToDelEdgesDataIds.includes(e.id));
   needToDelEdges.remove();
 
@@ -167,6 +169,7 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
       id,
     };
   });
+  console.log('套索数据集', { data: selectedNodesData.map(d => d.mgmt_ip), node: selectedNodesData.length, link: needToDelEdgesData.length + needToEditEdges.length })
 
   // ! 修改 mobility
   const newNode = {
@@ -283,7 +286,7 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
         }
       }
       res.links = res.links.filter((e) => {
-        return !data.childrenEditlinks.includes(e);
+        return !data.childrenEditlinks?.includes(e);
       });
       res.links = [
         ...res.links,
@@ -349,30 +352,30 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
         .attr("r", 3.5)
         .attr("cx", data.x)
         .attr("cy", data.y)
-        .on("click", function (d) {
-          if (!d.hasOwnProperty('className')) {
-            const selectedNodesSet = new Set([d.mgmt_ip]);
-            // 找到所有与当前节点相连的边
-            const connectedEdges = res.links.filter((e) => e.source.mgmt_ip === d.mgmt_ip || e.target.mgmt_ip === d.mgmt_ip);
+      // .on("click", function (d) {
+      //   if (!d.hasOwnProperty('className')) {
+      //     const selectedNodesSet = new Set([d.mgmt_ip]);
+      //     // 找到所有与当前节点相连的边
+      //     const connectedEdges = res.links.filter((e) => e.source.mgmt_ip === d.mgmt_ip || e.target.mgmt_ip === d.mgmt_ip);
 
-            // 找到所有邻居节点
-            connectedEdges.forEach((e) => {
-              if (e.source.mgmt_ip !== d.mgmt_ip && !e.source.hasOwnProperty('className')) {
-                selectedNodesSet.add(e.source.mgmt_ip);
-              } else if (e.target.mgmt_ip !== d.mgmt_ip && !e.target.hasOwnProperty('className')) {
-                selectedNodesSet.add(e.target.mgmt_ip);
-              }
-            });
+      //     // 找到所有邻居节点
+      //     connectedEdges.forEach((e) => {
+      //       if (e.source.mgmt_ip !== d.mgmt_ip && !e.source.hasOwnProperty('className')) {
+      //         selectedNodesSet.add(e.source.mgmt_ip);
+      //       } else if (e.target.mgmt_ip !== d.mgmt_ip && !e.target.hasOwnProperty('className')) {
+      //         selectedNodesSet.add(e.target.mgmt_ip);
+      //       }
+      //     });
 
-            // 获取邻居结点的数据
-            const selectedNodesData = res.nodes.filter((n) => selectedNodesSet.has(n.mgmt_ip));
+      //     // 获取邻居结点的数据
+      //     const selectedNodesData = res.nodes.filter((n) => selectedNodesSet.has(n.mgmt_ip));
 
-            // 获取邻居结点的DOM
-            const selectedNodesItem = container.selectAll(".circle").filter((n) => selectedNodesSet.has(n.mgmt_ip));
+      //     // 获取邻居结点的DOM
+      //     const selectedNodesItem = container.selectAll(".circle").filter((n) => selectedNodesSet.has(n.mgmt_ip));
 
-            handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
-          }
-        })
+      //     handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
+      //   }
+      // })
       force.nodes(res.nodes);
       // force.force("link", d3.forceLink(res.links).strength(linkStrength));
       // force.force("collide", null);
@@ -433,11 +436,19 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
         newNodeCoordinates.push({ x: cx, y: cy });
       }
     });
-    res.nodes.forEach(d =>{
-      d.shortPath = calculateShortestPath(d,newNode,res.nodes,res.links)?.length;
-      console.log("---"+d.shortPath+"---");
-    })
+
+  //TODO : 计算最短路径
+  // res.nodes.forEach(d => {
+  //   //增量时计算shortPath
+  //   d.shortPath = calculateShortestPath(d, newNode, res.nodes, res.links)?.length;
+  // })
+
   let count = 0;
+  const a = flatted.stringify(res)
+  // downloadJSON(flatted.parse(a), '/data/expdata/con_twitter.json')
+  // console.log(JSON.stringify(b), res)
+  console.log(a, 'res')
+
   force.nodes(res.nodes);
   // force.force("link", d3.forceLink(res.links).strength(linkStrength));
   // force.force("collide", d3.forceCollide(collide));
@@ -448,7 +459,6 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
   // nodeMobility({ nodes: res.nodes, adj, links: res.links }, 'pin')
   nodeMobility({ nodes: res.nodes, adj, links: res.links }, algo)
   force.force('custom', restrictForce(force))
-
 
   force.on("tick", () => {
     if (count === 260) {
@@ -497,7 +507,7 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
   force.alphaDecay(0.01);
   // force.alphaMin(0);
   force.restart();
-  
+
 }
 const init = (res) => {
   const svg = d3.select("#viewport").attr("height", 1000).attr("width", 1000);
@@ -521,12 +531,17 @@ const init = (res) => {
     .append("g")
     .attr("class", "circle_group")
     .append("circle")
-    .attr("class", (d) => d.class || "circle")
+    .attr("class", (d) => {
+      return d.class || d.className || "circle"
+    })
     .attr('id', d => `node_${d.mgmt_ip.replaceAll('.', '_')}`)
-    .attr("fill", (d) => d.fill)
-    .attr("r", 3.5)
+    .attr("fill", (d) => d.fill || 'rgb(200,200,200)')
+    .attr("r", d => d.class || d.className ? 4.5 : 3.5)
     .attr("cx", 100)
-    .attr("cy", 100);
+    .attr("cy", 100)
+    .on('click', (d) => {
+      console.log(d.mgmt_ip)
+    });
 
   let force = d3
     .forceSimulation(res.nodes)
@@ -557,7 +572,6 @@ const init = (res) => {
         .attr("cy", (d) => d.y);
     })
     .on('end', () => {
-      console.log('------init end---------')
       prevNodes = cloneDeep(res.nodes);
       prevLinks = cloneDeep(res.links);
       lassoendRef()
@@ -588,6 +602,7 @@ export const main = (
   linkStrength = linkStrengthAt;
   let force;
   let res = data;
+
   //expdata,筛选出与exp相关的节点
 
   //  /**
@@ -605,6 +620,8 @@ export const main = (
   //   *   res.nodes = res.nodes.filter((d) => nodeset.has(d.mgmt_ip));
 
   //添加id
+  console.log(res, 'res')
+  console.log(res.nodes.filter(d => d.children).map(d => ({ id: d.mgmt_ip, nodes: d.children.length, links: (d.childrenRemovelinks.length || 0) + (d.childrenEditlinks.length || 0) + (d.childrenStorelinks.length || 0) })))
 
   if (isInit) {
     res.links = res.links.map((l, id) => ({ ...l, id }));
@@ -658,31 +675,208 @@ export const main = (
   lassoendRef = lasso_end
 
   // 添加结点点击事件，点击之后与之相连的节点聚合
-  container.selectAll(".circle").on("click", function (d) {
-    if (!d.hasOwnProperty('className')) {
-      const selectedNodesSet = new Set([d.mgmt_ip]);
-      // 找到所有与当前节点相连的边
-      const connectedEdges = res.links.filter((e) => e.source.mgmt_ip === d.mgmt_ip || e.target.mgmt_ip === d.mgmt_ip);
+  // container.selectAll(".circle").on("click", function (d) {
+  //   if (!d.hasOwnProperty('className')) {
+  //     const selectedNodesSet = new Set([d.mgmt_ip]);
+  //     // 找到所有与当前节点相连的边
+  //     const connectedEdges = res.links.filter((e) => e.source.mgmt_ip === d.mgmt_ip || e.target.mgmt_ip === d.mgmt_ip);
 
-      // 找到所有邻居节点
-      connectedEdges.forEach((e) => {
-        if (e.source.mgmt_ip !== d.mgmt_ip && !e.source.hasOwnProperty('className')) {
-          selectedNodesSet.add(e.source.mgmt_ip);
-        } else if (e.target.mgmt_ip !== d.mgmt_ip && !e.target.hasOwnProperty('className')) {
-          selectedNodesSet.add(e.target.mgmt_ip);
-        }
-      });
+  //     // 找到所有邻居节点
+  //     connectedEdges.forEach((e) => {
+  //       if (e.source.mgmt_ip !== d.mgmt_ip && !e.source.hasOwnProperty('className')) {
+  //         selectedNodesSet.add(e.source.mgmt_ip);
+  //       } else if (e.target.mgmt_ip !== d.mgmt_ip && !e.target.hasOwnProperty('className')) {
+  //         selectedNodesSet.add(e.target.mgmt_ip);
+  //       }
+  //     });
 
-      // 获取邻居结点的数据
-      const selectedNodesData = res.nodes.filter((n) => selectedNodesSet.has(n.mgmt_ip));
+  //     // 获取邻居结点的数据
+  //     const selectedNodesData = res.nodes.filter((n) => selectedNodesSet.has(n.mgmt_ip));
 
-      // 获取邻居结点的DOM
-      const selectedNodesItem = container.selectAll(".circle").filter((n) => selectedNodesSet.has(n.mgmt_ip));
+  //     // 获取邻居结点的DOM
+  //     const selectedNodesItem = container.selectAll(".circle").filter((n) => selectedNodesSet.has(n.mgmt_ip));
 
-      handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
-    }
-  });
+  //     handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
+  //   }
+  // });
+
+
   // 给新节点添加右键事件，右键之后结点中的子节点展开
+  // container.selectAll(".new-circle").on("contextmenu", function (data) {
+  //   // 展开
+  //   d3.event.preventDefault();
+  //   let linkUpdate = res.links.filter((e) => {
+  //     return e.source.mgmt_ip === data.mgmt_ip || e.target.mgmt_ip === data.mgmt_ip;
+  //   });
+  //   const svg = d3.select("#viewport");
+  //   res.nodes = res.nodes.filter((n) => n.mgmt_ip !== data.mgmt_ip)
+  //   // ! 先把所有节点的change都重置为0
+  //   res.nodes.forEach(n => { n.changed = 0 })
+
+  //   d3.select(this).remove();
+  //   // 处理节点的进入、更新、退出
+  //   let nodeSelection = container
+  //     .selectAll(".circle_group")
+  //     .data(res.nodes, (d) => d.mgmt_ip);
+
+  //   // ! 修改 mobility
+  //   // ! 先重置
+  //   res.nodes.forEach(d => {
+  //     d.changed = 0
+  //     d.isNew = 0
+  //   })
+  //   res.nodes = [
+  //     ...res.nodes,
+  //     ...data.children.map((d) => ({ ...d, x: data.x, y: data.y, changed: 1, isNew: 1 })) //! 标记新节点 
+  //   ];
+  //   for (let i = 0; i < linkUpdate.length; i++) {
+  //     let link = linkUpdate[i];
+  //     // ! 与新节点有连边的旧节点，changed改为1
+  //     link.source.changed = 1
+  //     link.target.changed = 1
+  //     if (link.source.mgmt_ip === data.mgmt_ip) {
+  //       link.source = res.nodes.find(
+  //         (n) => n.mgmt_ip === data.mgmt_ip
+  //       );
+  //     }
+  //     if (link.target.mgmt_ip === data.mgmt_ip) {
+  //       link.target = res.nodes.find(
+  //         (n) => n.mgmt_ip === data.mgmt_ip
+  //       );
+  //     }
+  //   }
+  //   res.links = res.links.filter((e) => {
+  //     return !data.childrenEditLinks?.includes(e);
+  //   });
+  //   container
+  //     .selectAll(".edges_group")
+  //     .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
+  //     .exit()
+  //     .remove();
+  //   res.links = [...res.links, ...linkUpdate, ...data.childrenStoreLinks?.map((d) => {
+  //     const source = res.nodes.find(
+  //       (n) => n.mgmt_ip === d.source
+  //     );
+  //     const target = res.nodes.find(
+  //       (n) => n.mgmt_ip === d.target
+  //     );
+  //     source.x = data.x;
+  //     source.y = data.y;
+  //     target.x = data.x;
+  //     target.y = data.y;
+  //     return { ...d, source, target };
+  //   })];
+  //   container
+  //     .selectAll(".edges_group")
+  //     .data(res.links)
+  //     // .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
+  //     .enter()
+  //     .append("g")
+  //     .attr("class", "edges_group")
+  //     .attr("id", (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
+  //     .append("path")
+  //     .attr("class", "edge")
+  //     .attr("stroke", "#caadad")
+  //     .attr("stroke-width", 0.5)
+  //     .attr("d", (d) => {
+  //       return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+  //     });
+
+  //   nodeSelection
+  //     .data(res.nodes, (d) => d.mgmt_ip)
+  //     .enter()
+  //     .append("g")
+  //     .attr("class", "circle_group")
+  //     .append("circle")
+  //     .attr("id", d => `node_${d.mgmt_ip.replaceAll('.', '_')}`)
+  //     .attr("fill", "black")
+  //     .attr("class", "circle")
+  //     .attr("r", 3.5)
+  //     .attr("cx", data.x)
+  //     .attr("cy", data.y)
+  //   //点击聚合邻居
+  //   // .on("click", function (d) {
+  //   //   if (!d.hasOwnProperty('Name')) {
+  //   //     const selectedNodesSet = new Set([d.mgmt_ip]);
+  //   //     // 找到所有与当前节点相连的边
+  //   //     const connectedEdges = res.links.filter((e) => e.source.mgmt_ip === d.mgmt_ip || e.target.mgmt_ip === d.mgmt_ip);
+
+  //   //     // 找到所有邻居节点
+  //   //     connectedEdges.forEach((e) => {
+  //   //       if (e.source.mgmt_ip !== d.mgmt_ip && !e.source.hasOwnProperty('className')) {
+  //   //         selectedNodesSet.add(e.source.mgmt_ip);
+  //   //       } else if (e.target.mgmt_ip !== d.mgmt_ip && !e.target.hasOwnProperty('className')) {
+  //   //         selectedNodesSet.add(e.target.mgmt_ip);
+  //   //       }
+  //   //     });
+
+  //   //     // 获取邻居结点的数据
+  //   //     const selectedNodesData = res.nodes.filter((n) => selectedNodesSet.has(n.mgmt_ip));
+
+  //   //     // 获取邻居结点的DOM
+  //   //     const selectedNodesItem = container.selectAll(".circle").filter((n) => selectedNodesSet.has(n.mgmt_ip));
+
+  //   //     handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
+  //   //   }
+  //   // });
+
+  //   force.nodes(res.nodes);
+  //   force.force("link", d3.forceLink(res.links).strength(linkStrength));
+  //   force.force("collide", d3.forceCollide(collide))
+
+  //   force.on("tick", () => {
+  //     d3.selectAll(".circle")
+  //       .attr("cx", (d) => d.x)
+  //       .attr("cy", (d) => d.y);
+  //     container.selectAll(".edge").attr("d", (d) => {
+  //       return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+  //     });
+  //     d3.selectAll(".new-circle")
+  //       .attr("cx", (d) => d.x)
+  //       .attr("cy", (d) => d.y);
+  //     flag = false;
+  //     // force.stop();
+  //   });
+  //   force.on("end", function () {
+  //     flag = true;
+  //     console.log('--------------expand')
+  //     const evalMatrix = new CalcMatrix(prevNodes, prevLinks, res.nodes, res.links, linkDistance)
+  //     // console.log(evalMatrix.getAllMatrix?.());
+  //   });
+
+  //   force.velocityDecay(0.8);//开始用户实验前调整为0.9
+  //   force.alpha(0.9).restart();
+
+  //   // force.force("y", d3.forceY(500).strength(d => { console.log(d, 123123); return 0.04 }));
+  //   // force.force("y", d3.forceY(500).strength(0.04));
+  //   // force.force("x", d3.forceX(500).strength(0.04));
+  //   force.force('custom', restrictForce(force))
+
+
+  //   // 添加震荡
+  //   setTimeout(() => {
+  //     force.velocityDecay(0.80);
+  //     force.alpha(0.7).restart();
+  //   }, 2000);
+
+  //   lasso = d3
+  //     .lasso()
+  //     .closePathSelect(true)
+  //     .closePathDistance(100)
+  //     .items(d3.selectAll(".circle"))
+  //     .targetArea(svg)
+  //     .on("start", lasso_start)
+  //     .on("draw", lasso_draw)
+  //     .on("end", lasso_end);
+  //   svg.call(lasso);
+  //   svg.call(zoom);
+  //   const tempNode = res.nodes.find(n => n.mgmt_ip === data.mgmt_ip)
+  //   res.nodes.forEach(d => {
+  //     d.shortPath = calculateShortestPath(d, tempNode, res.nodes, res.links)?.length;
+  //   })
+  // });
+
+
   container.selectAll(".new-circle").on("contextmenu", function (data) {
     // 展开
     d3.event.preventDefault();
@@ -710,44 +904,61 @@ export const main = (
       ...res.nodes,
       ...data.children.map((d) => ({ ...d, x: data.x, y: data.y, changed: 1, isNew: 1 })) //! 标记新节点 
     ];
+
+    d3.selectAll(`#${getValidateId(data.mgmt_ip)}`).remove();
     for (let i = 0; i < linkUpdate.length; i++) {
       let link = linkUpdate[i];
       // ! 与新节点有连边的旧节点，changed改为1
       link.source.changed = 1
       link.target.changed = 1
-      if (link.source.mgmt_ip === data.mgmt_ip) {
-        link.source = res.nodes.find(
-          (n) => n.mgmt_ip === data.mgmt_ip
-        );
-      }
-      if (link.target.mgmt_ip === data.mgmt_ip) {
-        link.target = res.nodes.find(
-          (n) => n.mgmt_ip === data.mgmt_ip
-        );
+      for (let j = 0; j < data.childrenStorelinks.length; j++) {
+        if (link.id === data.childrenStorelinks[j].id || true) {
+          if (link.source.mgmt_ip === data.mgmt_ip) {
+            link.source = res.nodes.find(
+              (n) => n.mgmt_ip === data.childrenStorelinks[j].source.mgmt_ip
+            );
+          }
+          if (link.target.mgmt_ip === data.mgmt_ip) {
+            link.target = res.nodes.find(
+              (n) => n.mgmt_ip === data.childrenStorelinks[j].target.mgmt_ip
+            );
+          }
+        }
       }
     }
-    console.log(res.links)
     res.links = res.links.filter((e) => {
-      return !data.childrenEditLinks.includes(e);
+      return !data.childrenEditlinks.includes(e);
     });
+    res.links = [
+      ...res.links,
+      ...linkUpdate,
+      ...data.childrenRemovelinks?.map((d) => {
+        const source = res.nodes.find(
+          (n) => n.mgmt_ip === d.source.mgmt_ip
+        );
+        const target = res.nodes.find(
+          (n) => n.mgmt_ip === d.target.mgmt_ip
+        );
+        source.x = data.x;
+        source.y = data.y;
+        target.x = data.x;
+        target.y = data.y;
+        return { ...d, source, target };
+      }),
+    ];
+
     container
       .selectAll(".edges_group")
       .data(res.links, (d) => d.source.mgmt_ip + "-" + d.target.mgmt_ip)
       .exit()
       .remove();
-    res.links = [...res.links, ...linkUpdate, ...data.childrenStoreLinks.map((d) => {
-      const source = res.nodes.find(
-        (n) => n.mgmt_ip === d.source
-      );
-      const target = res.nodes.find(
-        (n) => n.mgmt_ip === d.target
-      );
-      source.x = data.x;
-      source.y = data.y;
-      target.x = data.x;
-      target.y = data.y;
-      return { ...d, source, target };
-    })];
+
+    // let edges = container
+    //   .selectAll(".edges_group")
+    //   .data(res.links)
+    //   .exit()
+    //   .remove();
+    // 处理边线的进入、更新、退出
     container
       .selectAll(".edges_group")
       .data(res.links)
@@ -761,8 +972,14 @@ export const main = (
       .attr("stroke", "#caadad")
       .attr("stroke-width", 0.5)
       .attr("d", (d) => {
-        return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+        return `M ${data.x} ${data.y} L ${data.x} ${data.y}`;
       });
+    // .transition()
+    // .duration(500)
+    // .attr("d", (d) => {
+    //   return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+    // });
+    // 执行迪杰斯特拉算法计算最短路径长度
 
     nodeSelection
       .data(res.nodes, (d) => d.mgmt_ip)
@@ -776,31 +993,30 @@ export const main = (
       .attr("r", 3.5)
       .attr("cx", data.x)
       .attr("cy", data.y)
-      .on("click", function (d) {
-        if (!d.hasOwnProperty('className')) {
-          const selectedNodesSet = new Set([d.mgmt_ip]);
-          // 找到所有与当前节点相连的边
-          const connectedEdges = res.links.filter((e) => e.source.mgmt_ip === d.mgmt_ip || e.target.mgmt_ip === d.mgmt_ip);
+    // .on("click", function (d) {
+    //   if (!d.hasOwnProperty('className')) {
+    //     const selectedNodesSet = new Set([d.mgmt_ip]);
+    //     // 找到所有与当前节点相连的边
+    //     const connectedEdges = res.links.filter((e) => e.source.mgmt_ip === d.mgmt_ip || e.target.mgmt_ip === d.mgmt_ip);
 
-          // 找到所有邻居节点
-          connectedEdges.forEach((e) => {
-            if (e.source.mgmt_ip !== d.mgmt_ip && !e.source.hasOwnProperty('className')) {
-              selectedNodesSet.add(e.source.mgmt_ip);
-            } else if (e.target.mgmt_ip !== d.mgmt_ip && !e.target.hasOwnProperty('className')) {
-              selectedNodesSet.add(e.target.mgmt_ip);
-            }
-          });
+    //     // 找到所有邻居节点
+    //     connectedEdges.forEach((e) => {
+    //       if (e.source.mgmt_ip !== d.mgmt_ip && !e.source.hasOwnProperty('className')) {
+    //         selectedNodesSet.add(e.source.mgmt_ip);
+    //       } else if (e.target.mgmt_ip !== d.mgmt_ip && !e.target.hasOwnProperty('className')) {
+    //         selectedNodesSet.add(e.target.mgmt_ip);
+    //       }
+    //     });
 
-          // 获取邻居结点的数据
-          const selectedNodesData = res.nodes.filter((n) => selectedNodesSet.has(n.mgmt_ip));
+    //     // 获取邻居结点的数据
+    //     const selectedNodesData = res.nodes.filter((n) => selectedNodesSet.has(n.mgmt_ip));
 
-          // 获取邻居结点的DOM
-          const selectedNodesItem = container.selectAll(".circle").filter((n) => selectedNodesSet.has(n.mgmt_ip));
+    //     // 获取邻居结点的DOM
+    //     const selectedNodesItem = container.selectAll(".circle").filter((n) => selectedNodesSet.has(n.mgmt_ip));
 
-          handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
-        }
-      });
-
+    //     handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
+    //   }
+    // })
     force.nodes(res.nodes);
     // force.force("link", d3.forceLink(res.links).strength(linkStrength));
     // force.force("collide", null);
@@ -849,12 +1065,10 @@ export const main = (
       .on("end", lasso_end);
     svg.call(lasso);
     svg.call(zoom);
-    const tempNode=res.nodes.find(n => n.mgmt_ip === data.mgmt_ip)
-    res.nodes.forEach(d =>{
-      d.shortPath = calculateShortestPath(d,tempNode,res.nodes,res.links)?.length;
-      console.log("---"+d.shortPath);
-    })
-  });
+  })
+
+
+
   lasso = d3
     .lasso()
     .closePathSelect(true)
@@ -883,3 +1097,15 @@ export const main = (
 //     throw new Error(e);
 //   }
 // })();
+
+
+function downloadJSON(data, filename) {
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}

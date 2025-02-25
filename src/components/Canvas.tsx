@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { main } from "../core/index";
 import * as d3 from "d3";
@@ -6,6 +6,7 @@ import { useAtom } from "jotai";
 import { algoAtom, dataNameAtom } from "../store";
 import { DataMap } from "../config/data";
 import { cloneDeep } from "lodash";
+import * as flatted from 'flatted'
 
 const Wrapper = styled.div`
   width: 100%;
@@ -24,21 +25,26 @@ function Canvas({
   const [dataName] = useAtom<string>(dataNameAtom);
   const [algo] = useAtom<string>(algoAtom);
   const initRef = React.useRef(true);
+  const fileref = React.useRef(false);
+  const [fileContent,setFileContent] = useState<string>('');
+  const [f,setF] = useState<boolean>(false);
 
   React.useLayoutEffect(() => {
-    main(
-      cloneDeep(DataMap[dataName]),
-      lassoFlag,
-      initRef.current,
-      velocityDecay,
-      alpha,
-      collide,
-      alphaMin,
-      alphaDecay,
-      linkStrength,
-      algo,
-      true,
-    );
+
+        main(
+          cloneDeep(DataMap[dataName]),
+          lassoFlag,
+          initRef.current,
+          velocityDecay,
+          alpha,
+          collide,
+          alphaMin,
+          alphaDecay,
+          linkStrength,
+          algo,
+          true,
+        );
+
     // initRef.current = false;
   }, [
     lassoFlag,
@@ -67,6 +73,7 @@ function Canvas({
   return (
     <Wrapper>
       <svg id={"viewport"}></svg>
+      <input type="file" id="file" ref={fileref}/>
     </Wrapper>
   );
 }
