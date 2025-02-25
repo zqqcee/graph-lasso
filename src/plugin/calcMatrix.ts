@@ -208,6 +208,15 @@ export class CalcMatrix {
     deltaChangedMobility() {
         return this.nodes.filter(d => d.changed).map(n => n.mobility || 1).reduce((p, c) => { return p + c })
     }
+
+
+    maxVelocity() {
+        const avg = (arr: any[]) =>
+            Math.floor(arr?.reduce((p, c) => p + c) / arr.length);
+        const sum = (arr) => arr?.reduce((p, c) => p + c)
+        return sum(this.nodes.map(n => n.maxVelocity))
+    }
+
     getAllMatrix() {
         const energy = this.energy()
         const deltaPos = this.deltaPos()
@@ -216,6 +225,7 @@ export class CalcMatrix {
         const deltaDCQ = this.deltaDCQ() //这个计算了变化的指标
         const deltaMobility = this.deltaMobility()
         const deltaChangedMobility = this.deltaChangedMobility()
+        const maxVelocity = this.maxVelocity() //最大速度之和
         console.log(
             {
                 energy,
@@ -224,7 +234,8 @@ export class CalcMatrix {
                 deltaOrth,
                 deltaDCQ,
                 deltaMobility,
-                deltaChangedMobility
+                deltaChangedMobility,
+                maxVelocity
             }
         )
     }

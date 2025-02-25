@@ -9,11 +9,11 @@ import { restrictForce } from '../plugin/restrictForce'
 import { cloneDeep, update } from "lodash";
 import * as flatted from 'flatted';
 import { CalcMatrix } from "../plugin/calcMatrix";
-import { case1, case2, case3, case4 } from "../config/lassoConfig/cloud180";
+// import { case1, case2, case3, case4 } from "../config/lassoConfig/cloud180";
 // import { case1, case2, case3, case4 } from "../config/lassoConfig/con_twitter";
 // import { case1, case2, case3, case4 } from "../config/lassoConfig/email_eu_core";
 // import { case1, case2, case3, case4 } from "../config/lassoConfig/dimacs10";
-// import { case1, case2, case3, case4 } from "../config/lassoConfig/wiki_votes";
+import { case1, case2, case3, case4 } from "../config/lassoConfig/wiki_votes";
 import { s2case1, s2case2 } from "../config/lassoConfig/s2";
 import { s3case1 } from "../config/lassoConfig/s3";
 import { link } from "fs";
@@ -491,7 +491,6 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
     selectedNodesItem
       .attr("cx", (d) => d.x - ((d.x - tempx) / 260) * count)
       .attr("cy", (d) => d.y - ((d.y - tempy) / 260) * count);
-
     count += 5;
     flag = false;
   });
@@ -577,6 +576,7 @@ const init = (res) => {
     .on('end', () => {
       prevNodes = cloneDeep(res.nodes);
       prevLinks = cloneDeep(res.links);
+      console.log('初始布局结束，开始实验')
       lassoendRef()
     });
   force.alphaMin(0.01)
@@ -1018,6 +1018,10 @@ export const main = (
     //   }
     // })
     force.nodes(res.nodes);
+    const adj = getAdjacentMatrix(res.links)
+
+    nodeMobility({ nodes: res.nodes, adj, links: res.links }, algo)
+    console.log(algo, 'algo')
     // force.force("link", d3.forceLink(res.links).strength(linkStrength));
     // force.force("collide", null);
     force.on("tick", () => {
@@ -1039,9 +1043,16 @@ export const main = (
       const evalMatrix = new CalcMatrix(prevNodes, prevLinks, res.nodes, res.links, linkDistance)
       console.log(evalMatrix.getAllMatrix?.());
     });
-
-    force.velocityDecay(0.99);
-    force.alpha(0.3).restart();
+    if (algo === 'none') {
+      force.velocityDecay(0.99);
+    } else {
+      force.velocityDecay(0.80);
+    }
+    if (algo === 'none') {
+      force.alpha(0.3).restart();
+    } else {
+      force.alpha(0.6).restart();
+    }
     // force.force("y", d3.forceY(500).strength(0.04));
     // force.force("x", d3.forceX(500).strength(0.04));
     force.force('custom', restrictForce(force))
