@@ -68,12 +68,13 @@ export const dataOptions = [
 ];
 
 export const DataMap: { [key: string]: { nodes: any[]; links: any[] } } = {
-  con_twitter: con_twitter,
   cloud180: cloud180,
-  cloud2160: cloud2160,
+  con_twitter: con_twitter,
   email_eu_core: email_eu_core,
   dimacs10: dimacs10,
   wiki_votes: wiki_votes,
+  cloud2160: cloud2160,
+
 };
 export const DataKeys: { [key: string]: string } = {
 

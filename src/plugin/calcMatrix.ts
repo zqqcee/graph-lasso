@@ -213,7 +213,7 @@ export class CalcMatrix {
         const deltaPos = this.deltaPos()
         const deltaLen = this.deltaLen()
         const deltaOrth = this.deltaOrth()
-        const deltaDCQ = this.deltaDCQ()
+        const deltaDCQ = this.deltaDCQ() //这个计算了变化的指标
         const deltaMobility = this.deltaMobility()
         const deltaChangedMobility = this.deltaChangedMobility()
         console.log(

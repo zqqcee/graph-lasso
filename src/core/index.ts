@@ -9,7 +9,11 @@ import { restrictForce } from '../plugin/restrictForce'
 import { cloneDeep, update } from "lodash";
 import * as flatted from 'flatted';
 import { CalcMatrix } from "../plugin/calcMatrix";
-import { case1, case2, case3, case4 } from "../config/lassoConfig/con_twitter";
+import { case1, case2, case3, case4 } from "../config/lassoConfig/cloud180";
+// import { case1, case2, case3, case4 } from "../config/lassoConfig/con_twitter";
+// import { case1, case2, case3, case4 } from "../config/lassoConfig/email_eu_core";
+// import { case1, case2, case3, case4 } from "../config/lassoConfig/dimacs10";
+// import { case1, case2, case3, case4 } from "../config/lassoConfig/wiki_votes";
 import { s2case1, s2case2 } from "../config/lassoConfig/s2";
 import { s3case1 } from "../config/lassoConfig/s3";
 import { link } from "fs";
@@ -447,7 +451,6 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
   const a = flatted.stringify(res)
   // downloadJSON(flatted.parse(a), '/data/expdata/con_twitter.json')
   // console.log(JSON.stringify(b), res)
-  console.log(a, 'res')
 
   force.nodes(res.nodes);
   // force.force("link", d3.forceLink(res.links).strength(linkStrength));
@@ -654,23 +657,20 @@ export const main = (
     // Style the not possible dot
     lasso
       .notPossibleItems()
-      .classed("not_possible", true)
-      .classed("possible", false);
+    // .classed("not_possible", true)
+    // .classed("possible", false);
   };
   const lasso_end = () => {
     // Reset the style of the not selected dots
-    lasso.items().classed("not_possible", false).classed("possible", false);
-    // Style the selected dots
+    // lasso.items().classed("not_possible", false).classed("possible", false);
 
     // ! 根据ip来选择那些节点被聚合
-
-    const selectedNodesItem = lasso.selectedItems(); //选择的DOM
-    // const selectedNodesItem = d3.selectAll('circle').filter(d => {
-    //   return case4.includes(d?.mgmt_ip);
-    // })
-    // const selectedNodesData = selectedNodesItem.data(); //选择的节点数据
+    // const selectedNodesItem = lasso.selectedItems(); //选择的DOM
+    const selectedNodesItem = d3.selectAll('circle').filter(d => {
+      return case4.includes(d?.mgmt_ip);
+    })
+    const selectedNodesData = selectedNodesItem.data(); //选择的节点数据
     handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
-
   };
   lassoendRef = lasso_end
 
