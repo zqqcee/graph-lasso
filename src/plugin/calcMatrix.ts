@@ -40,6 +40,24 @@ export class CalcMatrix {
         return e;
     }
 
+    prevEnergy() {
+        let e = 0;
+        const adj = getAdjacentMatrix(this.prevLinks);
+        let shortestPathMatrix = {}
+        for (let node in adj) {
+            shortestPathMatrix[node] = dijkstra(adj, node)
+        }
+        for (let i = 0; i < this.prevNodes.length; i++) {
+            for (let j = i + 1; j < this.prevNodes.length; j++) {
+                const sp = shortestPathMatrix[this.prevNodes[i].mgmt_ip]?.[this.prevNodes[j].mgmt_ip];
+                if (sp !== Infinity && sp) {
+                    e += Math.pow(dis(this.prevNodes[i], this.prevNodes[j]) - sp * this.linkDistance, 2);
+                }
+            }
+        }
+        return e;
+
+    }
     deltaPos(changed) {
         // nodes 是现存图中的所有节点
         // prev nodes 是原来图中的节点
@@ -221,6 +239,7 @@ export class CalcMatrix {
 
     getAllMatrix() {
         const energy = this.energy()
+        const prevEnergy = this.prevEnergy()
         const deltaPos = this.deltaPos()
         const deltaLen = this.deltaLen()
         const deltaOrth = this.deltaOrth()
@@ -230,8 +249,10 @@ export class CalcMatrix {
         const maxVelocity = this.maxVelocity() //最大速度之和
         const costTime = this.costTime;
         console.log(
+            'explog',
             {
                 energy,
+                prevEnergy,
                 deltaPos,
                 deltaLen,
                 deltaOrth,

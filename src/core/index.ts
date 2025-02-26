@@ -9,11 +9,11 @@ import { restrictForce } from '../plugin/restrictForce'
 import { cloneDeep, update } from "lodash";
 import * as flatted from 'flatted';
 import { CalcMatrix } from "../plugin/calcMatrix";
-// import { case1, case2, case3, case4 } from "../config/lassoConfig/cloud180";
+import { case1, case2, case3, case4 } from "../config/lassoConfig/cloud180";
 // import { case1, case2, case3, case4 } from "../config/lassoConfig/con_twitter";
 // import { case1, case2, case3, case4 } from "../config/lassoConfig/email_eu_core";
 // import { case1, case2, case3, case4 } from "../config/lassoConfig/dimacs10";
-import { case1, case2, case3, case4 } from "../config/lassoConfig/wiki_votes";
+// import { case1, case2, case3, case4 } from "../config/lassoConfig/wiki_votes";
 import { s2case1, s2case2 } from "../config/lassoConfig/s2";
 import { s3case1 } from "../config/lassoConfig/s3";
 import { link } from "fs";
@@ -580,7 +580,7 @@ const init = (res) => {
     .on('end', () => {
       prevNodes = cloneDeep(res.nodes);
       prevLinks = cloneDeep(res.links);
-      console.log('初始布局结束，开始实验')
+      console.log('explog:初始布局结束，开始实验')
       lassoendRef()
     });
   force.alphaMin(0.01)
@@ -671,10 +671,10 @@ export const main = (
     // ! 根据ip来选择那些节点被聚合
     // const selectedNodesItem = lasso.selectedItems(); //选择的DOM
     const selectedNodesItem = d3.selectAll('circle').filter(d => {
-      return case4.includes(d?.mgmt_ip);
+      return case1.includes(d?.mgmt_ip);
     })
     const selectedNodesData = selectedNodesItem.data(); //选择的节点数据
-    handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
+    // handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
   };
   lassoendRef = lasso_end
 
@@ -845,7 +845,7 @@ export const main = (
   //     flag = true;
   //     console.log('--------------expand')
   //     const evalMatrix = new CalcMatrix(prevNodes, prevLinks, res.nodes, res.links, linkDistance)
-  //     // console.log(evalMatrix.getAllMatrix?.());
+  //     // console.log('explog',evalMatrix.getAllMatrix?.());
   //   });
 
   //   force.velocityDecay(0.8);//开始用户实验前调整为0.9
