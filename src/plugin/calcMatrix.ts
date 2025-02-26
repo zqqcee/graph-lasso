@@ -11,13 +11,15 @@ export class CalcMatrix {
         prevLinks, // 之前的连边
         nodes,
         links,
-        linkDistance
+        linkDistance,
+        costTime,// 花费的时间
     ) {
         this.prevNodes = prevNodes;
         this.prevLinks = prevLinks;
         this.nodes = nodes;
         this.links = links;
         this.linkDistance = linkDistance
+        this.costTime = costTime
     }
 
     energy() {
@@ -226,6 +228,7 @@ export class CalcMatrix {
         const deltaMobility = this.deltaMobility()
         const deltaChangedMobility = this.deltaChangedMobility()
         const maxVelocity = this.maxVelocity() //最大速度之和
+        const costTime = this.costTime;
         console.log(
             {
                 energy,
@@ -235,7 +238,8 @@ export class CalcMatrix {
                 deltaDCQ,
                 deltaMobility,
                 deltaChangedMobility,
-                maxVelocity
+                maxVelocity,
+                costTime
             }
         )
     }

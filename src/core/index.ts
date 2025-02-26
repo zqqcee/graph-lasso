@@ -17,7 +17,9 @@ import { case1, case2, case3, case4 } from "../config/lassoConfig/wiki_votes";
 import { s2case1, s2case2 } from "../config/lassoConfig/s2";
 import { s3case1 } from "../config/lassoConfig/s3";
 import { link } from "fs";
-
+import { start } from "repl";
+let startTime = 0;
+let endTime = 0;
 const threshold = 20; //1 独立连通子图，2 游离节点， 3 一度邻居 4 二度邻居
 let lasso: any;
 let flag = true;//标记是否可展开
@@ -456,13 +458,14 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
   // force.force("link", d3.forceLink(res.links).strength(linkStrength));
   // force.force("collide", d3.forceCollide(collide));
   // !计算 mobility 传入force中
+  startTime = new Date();
+
   const adj = getAdjacentMatrix(res.links)
   // nodeMobility({ nodes: res.nodes, adj }, 'age')
   // nodeMobility({ nodes: res.nodes, adj }, 'degree')
   // nodeMobility({ nodes: res.nodes, adj, links: res.links }, 'pin')
   nodeMobility({ nodes: res.nodes, adj, links: res.links }, algo)
   force.force('custom', restrictForce(force))
-
   force.on("tick", () => {
     if (count === 260) {
       selectedNodesItem.remove();
@@ -495,9 +498,10 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
     flag = false;
   });
   force.on("end", function () {
+    endTime = new Date();
     flag = true;
     // ! 减量迭代结束
-    const evalMatrix = new CalcMatrix(prevNodes, prevLinks, res.nodes, res.links, linkDistance)
+    const evalMatrix = new CalcMatrix(prevNodes, prevLinks, res.nodes, res.links, linkDistance, endTime - startTime)
     console.log(evalMatrix.getAllMatrix?.());
   });
   force.alpha(
@@ -1017,6 +1021,7 @@ export const main = (
     //     handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
     //   }
     // })
+    startTime = new Date()
     force.nodes(res.nodes);
     const adj = getAdjacentMatrix(res.links)
 
@@ -1039,8 +1044,9 @@ export const main = (
     });
     force.on("end", function () {
       flag = true;
+      endTime = new Date();
       console.log('--------------expand')
-      const evalMatrix = new CalcMatrix(prevNodes, prevLinks, res.nodes, res.links, linkDistance)
+      const evalMatrix = new CalcMatrix(prevNodes, prevLinks, res.nodes, res.links, linkDistance, endTime - startTime)
       console.log(evalMatrix.getAllMatrix?.());
     });
     if (algo === 'none') {
