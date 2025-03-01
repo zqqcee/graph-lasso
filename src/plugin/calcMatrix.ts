@@ -239,6 +239,7 @@ export class CalcMatrix {
 
     getAllMatrix() {
         const energy = this.energy()
+        const deltaEnergy = energy - this.prevEnergy()
         const prevEnergy = this.prevEnergy()
         const deltaPos = this.deltaPos()
         const deltaLen = this.deltaLen()
@@ -252,6 +253,7 @@ export class CalcMatrix {
             'explog',
             {
                 energy,
+                deltaEnergy,
                 prevEnergy,
                 deltaPos,
                 deltaLen,

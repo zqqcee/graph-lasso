@@ -155,4 +155,19 @@ const case4 = [
     "4046",
     "922"
 ]
-export { case1, case2, case3, case4 }
+
+const expandCase = [
+    [
+        "3c36bfa3-74b6-4bb6-97fc-cc73c252bfb4"
+    ],
+    [
+        "3ca6d2e6-0c13-415d-9fa0-9e3c3cf2fd89"
+    ],
+    [
+        "46a88ce8-6180-4b0b-874d-1623bea7f5d4"
+    ],
+    [
+        "9b53fdcb-a25f-4a0d-b5bd-53e1dd7f0bb3"
+    ]
+]
+export { case1, case2, case3, case4, expandCase }

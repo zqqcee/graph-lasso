@@ -54,5 +54,20 @@ const case4 = [
     "124.183.186.125"
 ]
 
+const expandCase = [
+    [
+        "5978a778-5350-41e4-b80e-11a696549c51"
+    ],
+    [
+        "2fa5b9c5-99fb-4528-9428-1de2d1cffdf3"
+    ],
+    [
+        "6a4388cf-2554-46f2-82b3-6ee032f5ff58"
+    ],
+    [
+        "39267bfe-6346-492e-af28-c589d1628845"
+    ]
+]
 
-export { case1, case2, case3, case4 }
+
+export { case1, case2, case3, case4, expandCase }

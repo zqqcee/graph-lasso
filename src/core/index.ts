@@ -628,7 +628,7 @@ export const main = (
 
   //添加id
   console.log(res, 'res')
-  console.log(res.nodes.filter(d => d.children).map(d => ({ id: d.mgmt_ip, nodes: d.children.length, links: (d.childrenRemovelinks.length || 0) + (d.childrenEditlinks.length || 0) + (d.childrenStorelinks.length || 0) })))
+  console.log(res.nodes.filter(d => d.children).map(d => [d.mgmt_ip]))
 
   if (isInit) {
     res.links = res.links.map((l, id) => ({ ...l, id }));

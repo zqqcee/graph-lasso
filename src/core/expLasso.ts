@@ -20,6 +20,7 @@ let forceStore;
 let prevNodes = []
 let prevLinks = [];
 let evalMatrix = {}
+
 let lassoendRef = () => { }
 const getValidateId = (id: string) =>
   `id_${id.replaceAll("-", "").replaceAll(".", "")}`;
@@ -39,7 +40,7 @@ let startTime: number; // 记录第一次点击的时间
  * @param lasso_draw 
  * @param lasso_end 
  */
-function handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start, lasso_draw, lasso_end) {
+function handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start, lasso_draw, lasso_end, algo) {
 
   const container = d3.select("#container");
   //TODO-1.5: 这里是要聚合的节点
@@ -327,9 +328,15 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start,
         // const evalMatrix = new CalcMatrix(prevNodes, prevLinks, res.nodes, res.links, linkDistance)
         // console.log(evalMatrix.getAllMatrix?.());
       });
+      if (algo === 'none') {
+        console.log('none hahah')
+        force.velocityDecay(0.99);
+        force.alpha(0.3).restart();
+      } else {
+        force.velocityDecay(0.6);
+        force.alpha(0.5).restart();
+      }
 
-      force.velocityDecay(0.99);
-      force.alpha(0.3).restart();
       // force.force("y", d3.forceY(500).strength(0.04));
       // force.force("x", d3.forceX(500).strength(0.04));
       force.force('custom', restrictForce(force))
@@ -371,17 +378,23 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start,
   // force.force("collide", d3.forceCollide(collide));
   force.force('custom', restrictForce(force))
 
-
+  if (algo !== 'none') {
+    //动态图方法逐渐隐去
+    selectedNodesItem.style('opacity', 1).transition().duration(1000).style('opacity', 0)
+  }
   force.on("tick", () => {
+
     if (count === 260) {
       selectedNodesItem.remove();
     }
-    d3.selectAll(".circle")
-      .attr("cx", (d) => d.x)
-      .attr("cy", (d) => d.y);
-    container.selectAll(".edge").attr("d", (d) => {
-      return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
-    });
+    if (algo === 'none' || count > 80) {
+      d3.selectAll(".circle")
+        .attr("cx", (d) => d.x)
+        .attr("cy", (d) => d.y);
+      container.selectAll(".edge").attr("d", (d) => {
+        return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+      });
+    }
     let tempx = 0;
     let tempy = 0;
     container.selectAll(".new-circle")
@@ -397,9 +410,11 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start,
      * 被选中的节点聚合的过程中，其他节点也会一直调整布局
      */
     //坍塌动画
-    selectedNodesItem
-      .attr("cx", (d) => d.x - ((d.x - tempx) / 260) * count)
-      .attr("cy", (d) => d.y - ((d.y - tempy) / 260) * count);
+    if (algo === 'none') {
+      selectedNodesItem
+        .attr("cx", (d) => d.x - ((d.x - tempx) / 260) * count)
+        .attr("cy", (d) => d.y - ((d.y - tempy) / 260) * count);
+    }
 
     count += 5;
     flag = false;
@@ -438,7 +453,7 @@ const rightInit = (rightres, datacase, eflag) => {
     });
     res.links = [...res.links, ...(temp[0].childrenStoreLinks || []), ...(temp[0].childrenEditLinks || [])];
   }
-  const rightSvg = d3.select("#top-right-svg").attr("height", 375);
+  const rightSvg = d3.select("#top-right-svg").attr("height", 365);
   rightSvg.selectAll("*").remove();
   const rightContainer = rightSvg.append("g").attr("id", "right-container").attr("height", 375).attr("width", 500).attr("transform", "scale(0.5)");
   let rightEdges = rightContainer
@@ -460,7 +475,7 @@ const rightInit = (rightres, datacase, eflag) => {
     .append("circle")
     .attr("class", (d) => d.class || d.className || "right_circle")
     .attr('id', d => `node_${d.mgmt_ip.replaceAll('.', '_')}`)
-    .attr("fill", (d) => d.fill)
+    .attr("fill", (d) => d.fill || 'rgb(131, 124, 124)')
     .attr("r", 3.5)
     .attr("cx", 100)
     .attr("cy", 100);
@@ -503,7 +518,7 @@ const rightInit = (rightres, datacase, eflag) => {
   return force;
 }
 const init = (res) => {
-  const svg = d3.select("#exp-viewport").attr("height", 750).attr("width", 750).attr("border", "1px solid black");
+  const svg = d3.select("#exp-viewport").attr("height", 725).attr("width", 875).attr("border", "1px solid black");
   svg.selectAll("*").remove();
   const container = svg.append("g").attr("id", "container").attr("height", 500).attr("width", 500).attr("transform", "scale(0.9)");
 
@@ -527,7 +542,7 @@ const init = (res) => {
     .append("circle")
     .attr("class", (d) => d.class || d.className || "circle")
     .attr('id', d => `node_${d.mgmt_ip.replaceAll('.', '_')}`)
-    .attr("fill", (d) => d.fill)
+    .attr("fill", (d) => d.fill || 'rgb(131, 124, 124)')
     .attr("r", 3.5)
     .attr("cx", 100)
     .attr("cy", 100);
@@ -547,8 +562,8 @@ const init = (res) => {
     .force("collide", d3.forceCollide(collide))
     .force("charge", d3.forceManyBody().strength(-10))
     // .force("center", d3.forceCenter(500, 500))
-    .force("y", d3.forceY(450).strength(0.04))
-    .force("x", d3.forceX(400).strength(0.04))
+    .force("y", d3.forceY(410).strength(0.04))
+    .force("x", d3.forceX(490).strength(0.04))
     .on("tick", () => {
       container.selectAll(".circle")
         .attr("cx", (d) => d.x)
@@ -571,7 +586,19 @@ const init = (res) => {
 
   return force;
 };
-export const main = (data: { nodes: any[]; links: any[] }, datacase: string[], exflag: boolean) => {
+// export const main = (data: { nodes: any[]; links: any[] }, datacase: string[], exflag: boolean) => {
+// {
+//   isAggregate:true,//是否为聚合的case, 为true时聚合
+//   data:cloneDeep(DataMap[dataName]),
+//   algo:'none',
+//   currentCase:asset2[0]
+// }
+export const main = ({
+  isAggregate: exflag,
+  data,
+  algo,
+  currentCase: datacase,
+}: any) => {
   let force;
   let rightforce;
   let res = data;
@@ -579,7 +606,7 @@ export const main = (data: { nodes: any[]; links: any[] }, datacase: string[], e
   let temp;
   let children = [];
   if (!exflag) {
-    console.log(datacase)
+    //展开
     temp = data.nodes.filter(d => {
       return d.mgmt_ip === datacase[0];
     })[0];
@@ -590,6 +617,7 @@ export const main = (data: { nodes: any[]; links: any[] }, datacase: string[], e
   rightforce = rightInit(rightres, datacase, exflag);
   forceStore = force;
   let zoom = d3.zoom().scaleExtent([0.1, 5]).on("zoom", zoomed);
+  d3.select('#exp-viewport').call(zoom);
 
   const container = d3.select("#container");
   const rightContainer = d3.select("#right-container");
@@ -646,10 +674,16 @@ export const main = (data: { nodes: any[]; links: any[] }, datacase: string[], e
         }
       }
       d3.select("#right-container").selectAll("text").remove();
-      d3.select("#right-container").append("text").attr("id", "accuracy").text(`准确率：${(1 - (datacase.length - count + selectedNodesData.length - count) / rightres.nodes.length) * 100}%`).attr("x", 10).attr("y", 40).attr("font-size", "20px")
-      d3.select("#right-container").append("text").attr("id", "precision").text(`精确率：${count / selectedNodesData.length * 100}%`).attr("x", 10).attr("y", 80).attr("font-size", "20px")
-      d3.select("#right-container").append("text").attr("id", "recall").text(`召回率：${count / datacase.length * 100}%`).attr("x", 10).attr("y", 120).attr("font-size", "20px")
+      // d3.select("#right-container").append("text").attr("id", "accuracy").style('opacity', 0).text(`准确率：${(1 - (datacase.length - count + selectedNodesData.length - count) / rightres.nodes.length) * 100}%`).attr("x", 10).attr("y", 40).attr("font-size", "20px")
+      // d3.select("#right-container").append("text").attr("id", "precision").style('opacity', 0).text(`精确率：${count / selectedNodesData.length * 100}%`).attr("x", 10).attr("y", 80).attr("font-size", "20px")
+      // d3.select("#right-container").append("text").attr("id", "recall").style('opacity', 0).text(`召回率：${count / datacase.length * 100}%`).attr("x", 10).attr("y", 120).attr("font-size", "20px")
+      d3.select("#right-container").append("text").attr("id", "accuracy").style('opacity', 0).text(`${(1 - (datacase.length - count + selectedNodesData.length - count) / rightres.nodes.length)}`)
+      d3.select("#right-container").append("text").attr("id", "precision").style('opacity', 0).text(`${count / selectedNodesData.length}`)
+      d3.select("#right-container").append("text").attr("id", "recall").style('opacity', 0).text(`${count / datacase.length}`)
+      d3.select("#right-container").append("text").attr("id", "finishLasso").text('已选择').attr("x", 10).attr("y", 40).attr("font-size", "20px")
+
     } else {
+      //展开
       let len = temp.children.length;
       console.log(selectedNodesData, children)
       for (let i = 0; i < selectedNodesData.length; i++) {
@@ -660,9 +694,14 @@ export const main = (data: { nodes: any[]; links: any[] }, datacase: string[], e
         }
       }
       d3.select("#right-container").selectAll("text").remove();
-      d3.select("#right-container").append("text").attr("id", "accuracy").text(`准确率：${(1 - (len - count + selectedNodesData.length - count) / rightres.nodes.length) * 100}%`).attr("x", 10).attr("y", 40).attr("font-size", "20px")
-      d3.select("#right-container").append("text").attr("id", "precision").text(`精确率：${count / selectedNodesData.length * 100}%`).attr("x", 10).attr("y", 80).attr("font-size", "20px")
-      d3.select("#right-container").append("text").attr("id", "recall").text(`召回率：${count / len * 100}%`).attr("x", 10).attr("y", 120).attr("font-size", "20px")
+      // d3.select("#right-container").append("text").attr("id", "accuracy").text(`准确率：${(1 - (len - count + selectedNodesData.length - count) / rightres.nodes.length) * 100}%`).attr("x", 10).attr("y", 40).attr("font-size", "20px").style('opacity', 0)
+      // d3.select("#right-container").append("text").attr("id", "precision").text(`精确率：${count / selectedNodesData.length * 100}%`).attr("x", 10).attr("y", 80).attr("font-size", "20px")
+      // d3.select("#right-container").append("text").attr("id", "recall").text(`召回率：${count / len * 100}%`).attr("x", 10).attr("y", 120).attr("font-size", "20px")
+      d3.select("#right-container").append("text").attr("id", "accuracy").style('opacity', 0).text(`${(1 - (datacase.length - count + selectedNodesData.length - count) / rightres.nodes.length)}`)
+      d3.select("#right-container").append("text").attr("id", "precision").style('opacity', 0).text(`${count / selectedNodesData.length}`)
+      d3.select("#right-container").append("text").attr("id", "recall").style('opacity', 0).text(`${count / datacase.length}`)
+      d3.select("#right-container").append("text").attr("id", "finishLasso").text('已选择').attr("x", 10).attr("y", 40).attr("font-size", "20px")
+
     }
 
   }
@@ -672,18 +711,20 @@ export const main = (data: { nodes: any[]; links: any[] }, datacase: string[], e
     const endTime = Date.now(); // 记录结束时间
     const timeDifference = endTime - startTime; // 计算时间差
     d3.select("#exp-viewport").selectAll("text").remove();
-    d3.select("#exp-viewport").append("text").text(`用户反应时间: ${timeDifference} ms`).attr("x", 10).attr("y", 40).attr("font-size", "20px");
-    console.log(`用户反应时间: ${timeDifference} ms`);
+    //用户反应时间
+    d3.select("#exp-viewport").append("text").text(`${timeDifference}`).style('opacity', 0).attr("x", 10).attr("y", 40).attr("font-size", "20px");
+    d3.select("#exp-viewport").append("text").text(`已点击`).attr("x", 160).attr("y", 28).attr("font-size", "15px");
   });
   force.on("end", function () {
     // 第一次点击
     startTime = Date.now(); // 记录开始时间
     if (exflag) {
+      //聚合
       const selectedNodesItem = container.selectAll('circle').filter(d => {
         return datacase.includes(d?.mgmt_ip);
       });
       selectCase = selectedNodesItem.data();
-      handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start, lasso_draw, lasso_end);
+      handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start, lasso_draw, lasso_end, algo);
     } else {
       //展开
       for (let i = 0; i < datacase.length; i++) {
@@ -800,7 +841,7 @@ export const main = (data: { nodes: any[]; links: any[] }, datacase: string[], e
           .attr("class", "circle_group")
           .append("circle")
           .attr("id", d => `node_${d.mgmt_ip.replaceAll('.', '_')}`)
-          .attr("fill", "black")
+          .attr("fill", (d) => d.fill || 'rgb(65, 69, 62)')
           .attr("class", "circle")
           .attr("r", 3.5)
           .attr("cx", newdata.x)
@@ -832,28 +873,39 @@ export const main = (data: { nodes: any[]; links: any[] }, datacase: string[], e
         force.nodes(res.nodes);
         // force.force("link", d3.forceLink(res.links).strength(linkStrength));
         // force.force("collide", null);
+        let countTick = 0
         force.on("tick", () => {
-          d3.selectAll(".circle")
-            .attr("cx", (d) => d.x)
-            .attr("cy", (d) => d.y);
-          container.selectAll(".edge").attr("d", (d) => {
-            return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
-          });
+          if (countTick > 80 || algo === 'none') {
+            d3.selectAll(".circle")
+              .attr("cx", (d) => d.x)
+              .attr("cy", (d) => d.y);
+            container.selectAll(".edge").attr("d", (d) => {
+              return `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`;
+            });
+          }
           d3.selectAll(".new-circle")
             .attr("cx", (d) => d.x)
             .attr("cy", (d) => d.y);
           flag = false;
           // force.stop();
+          countTick++;
         });
         force.on("end", function () {
           flag = true;
           console.log('--------------expand')
-          const evalMatrix = new CalcMatrix(prevNodes, prevLinks, res.nodes, res.links, linkDistance)
-          console.log(evalMatrix.getAllMatrix?.());
         });
 
-        force.velocityDecay(0.99);
-        force.alpha(0.3).restart();
+        if (algo === 'none') {
+          force.velocityDecay(0.99);
+        } else {
+          force.velocityDecay(0.80);
+        }
+        if (algo === 'none') {
+          force.alpha(0.3).restart();
+        } else {
+          force.alpha(0.6).restart();
+        }
+
         // force.force("y", d3.forceY(500).strength(0.04));
         // force.force("x", d3.forceX(500).strength(0.04));
         force.force('custom', restrictForce(force))
