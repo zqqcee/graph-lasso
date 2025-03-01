@@ -195,15 +195,15 @@ const wiki_voteExpandData = wiki_vote_expandCase.map((data, index) => ({
 export const expDataSource = [
   //增量
   ...cloud180ExpandData,
-  // ...con_twitterExpandData,
-  // ...email_eu_coreExpandData,
+  ...con_twitterExpandData,
+  ...email_eu_coreExpandData,
   // ...dimacs10ExpandData,
   // ...wiki_voteExpandData,
 
-  // //减量
+  //减量
   ...cloud180AggData,
-  // ...con_twitterAggData,
-  // ...email_eu_coreAggData,
+  ...con_twitterAggData,
+  ...email_eu_coreAggData,
   // ...dimacs10AggData,
   // ...wiki_voteAggData,
 
