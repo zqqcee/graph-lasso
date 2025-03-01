@@ -438,23 +438,68 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, force, lasso_start,
 }
 const rightInit = (rightres, datacase, eflag) => {
   let res = cloneDeep(rightres);
-  if (!eflag) {
-    let temp = res.nodes.filter(d => {
-      return d.mgmt_ip === datacase[0];
-    });
-    res.nodes = rightres.nodes.filter(d => {
-      return !datacase.includes(d.mgmt_ip);
-    });
 
-    console.log(temp[0].children)
-    res.nodes = [...res.nodes, ...temp[0].children];
-    res.links = rightres.links.filter(d => {
-      return d.source.mgmt_ip !== temp[0].mgmt_ip && d.target.mgmt_ip !== temp[0].mgmt_ip;
-    });
-    res.links = [...res.links, ...(temp[0].childrenStoreLinks || []), ...(temp[0].childrenEditLinks || [])];
-  }
   const rightSvg = d3.select("#top-right-svg").attr("height", 365);
   rightSvg.selectAll("*").remove();
+  if (!eflag) {
+    const container = d3.select("#container");
+    const newdata = container.selectAll('.new-circle').filter(d => {
+      return datacase.includes(d?.mgmt_ip);
+    }).data()[0];
+    let linkUpdate = res.links.filter((e) => {
+      return e.source.mgmt_ip === newdata.mgmt_ip || e.target.mgmt_ip === newdata.mgmt_ip;
+    });
+    res.nodes = [
+      ...res.nodes,
+      ...newdata.children.map((d) => ({ ...d, x: newdata.x, y: newdata.y, changed: 1, isNew: 1 })) //! 标记新节点 
+    ];
+    d3.selectAll(`#${getValidateId(newdata.mgmt_ip)}`).remove();
+    console.log('getValidateId(newdata.mgmt_ip)', getValidateId(newdata.mgmt_ip))
+    for (let i = 0; i < linkUpdate.length; i++) {
+      let link = linkUpdate[i];
+      // ! 与新节点有连边的旧节点，changed改为1
+      link.source.changed = 1
+      link.target.changed = 1
+      for (let j = 0; j < newdata.childrenStorelinks.length; j++) {
+        if (link.id === newdata.childrenStorelinks[j].id || true) {
+          if (link.source.mgmt_ip === newdata.mgmt_ip) {
+            link.source = res.nodes.find(
+              (n) => n.mgmt_ip === newdata.childrenStorelinks[j].source.mgmt_ip
+            );
+          }
+          if (link.target.mgmt_ip === newdata.mgmt_ip) {
+            link.target = res.nodes.find(
+              (n) => n.mgmt_ip === newdata.childrenStorelinks[j].target.mgmt_ip
+            );
+          }
+        }
+      }
+    }
+
+
+    res.links = res.links.filter((e) => {
+      return !newdata.childrenEditlinks.includes(e);
+    });
+    res.links = [
+      ...res.links,
+      ...linkUpdate,
+      ...newdata.childrenRemovelinks?.map((d) => {
+        const source = res.nodes.find(
+          (n) => n.mgmt_ip === d.source.mgmt_ip
+        );
+        const target = res.nodes.find(
+          (n) => n.mgmt_ip === d.target.mgmt_ip
+        );
+        source.x = newdata.x;
+        source.y = newdata.y;
+        target.x = newdata.x;
+        target.y = newdata.y;
+        return { ...d, source, target };
+      }),
+    ];
+  }
+
+
   const rightContainer = rightSvg.append("g").attr("id", "right-container").attr("height", 375).attr("width", 500).attr("transform", "scale(0.5)");
   let rightEdges = rightContainer
     .selectAll(".edges_group")
@@ -466,6 +511,8 @@ const rightInit = (rightres, datacase, eflag) => {
     .attr("class", "edge")
     .attr("stroke", "#caadad")
     .attr("stroke-width", 0.5)
+
+  //这里应该是展开后的结果
   const rightCircles = rightContainer
     .selectAll(".circle_group")
     .data(res.nodes, (d) => d.mgmt_ip)
@@ -697,9 +744,9 @@ export const main = ({
       // d3.select("#right-container").append("text").attr("id", "accuracy").text(`准确率：${(1 - (len - count + selectedNodesData.length - count) / rightres.nodes.length) * 100}%`).attr("x", 10).attr("y", 40).attr("font-size", "20px").style('opacity', 0)
       // d3.select("#right-container").append("text").attr("id", "precision").text(`精确率：${count / selectedNodesData.length * 100}%`).attr("x", 10).attr("y", 80).attr("font-size", "20px")
       // d3.select("#right-container").append("text").attr("id", "recall").text(`召回率：${count / len * 100}%`).attr("x", 10).attr("y", 120).attr("font-size", "20px")
-      d3.select("#right-container").append("text").attr("id", "accuracy").style('opacity', 0).text(`${(1 - (datacase.length - count + selectedNodesData.length - count) / rightres.nodes.length)}`)
+      d3.select("#right-container").append("text").attr("id", "accuracy").style('opacity', 0).text(`${(1 - ((selectedNodesData.length - count) / rightres.nodes.length))}`)
       d3.select("#right-container").append("text").attr("id", "precision").style('opacity', 0).text(`${count / selectedNodesData.length}`)
-      d3.select("#right-container").append("text").attr("id", "recall").style('opacity', 0).text(`${count / datacase.length}`)
+      d3.select("#right-container").append("text").attr("id", "recall").style('opacity', 0).text(`${count / len}`)
       d3.select("#right-container").append("text").attr("id", "finishLasso").text('已选择').attr("x", 10).attr("y", 40).attr("font-size", "20px")
 
     }
