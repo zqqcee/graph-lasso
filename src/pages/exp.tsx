@@ -19,7 +19,7 @@ const HeaderText = styled.div`
 const Experient: React.FC = () => {
   return (
     <Layout style={{ height: '400px' }}>
-      <Header style={{height:50,borderBottom:'1px solid rgb(209 180 180 / 31%)', boxShadow:'rgb(0 0 0 / 10%) 1px 0px 5px 0px'}}>
+      <Header style={{height:50,border:'1px solid rgb(209 180 180 / 31%)', boxShadow:'rgb(0 0 0 / 10%) 1px 0px 5px 0px'}}>
       <HeaderText>
         交互式图探索用户实验平台
       </HeaderText>
