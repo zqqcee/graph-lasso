@@ -6,6 +6,11 @@
   /* fill:#DCF3D8;  */
   /* 在截增量的图的时，把最后一行注释掉 */
 }
+#newnode{
+  stroke: #100000;
+  stroke-width: 2;
+  fill: #a4eb0b;
+}
 .lasso path {
   stroke: rgb(80, 80, 80);
   stroke-width: 2px;

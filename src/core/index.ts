@@ -14,6 +14,7 @@ import { case1, case2, case3, case4 } from "../config/lassoConfig/cloud180";
 // import { case1, case2, case3, case4 } from "../config/lassoConfig/email_eu_core";
 // import { case1, case2, case3, case4 } from "../config/lassoConfig/dimacs10";
 // import { case1, case2, case3, case4 } from "../config/lassoConfig/wiki_votes";
+// import { case1 } from '../config/lassoConfig/testCase'
 import { s2case1, s2case2 } from "../config/lassoConfig/s2";
 import { s3case1 } from "../config/lassoConfig/s3";
 import { link } from "fs";
@@ -237,11 +238,13 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
     .attr("class", "circle_group")
     .append("circle")
     .attr("class", "new-circle")
-    .attr("id", (d) => uniqueId)
-    .attr("r", 3.5)
+    // .attr("id", (d) => uniqueId)
+    .attr("id", (d) => 'newnode')
+    .attr("r", 7.5)
     .attr("cx", avgX)
     .attr("cy", avgY)
-    .attr("fill", "blue")
+    .attr("fill", "black")
+    .attr("stroke", "black")
     .on("contextmenu", function (data) {
       // 展开
       d3.event.preventDefault();
@@ -509,7 +512,11 @@ function handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_
   );
   force.alphaMin(alphaMin);
   force.force("collide", d3.forceCollide(collide));
-  force.velocityDecay(0.7);
+  if (algo === 'none') {
+    force.velocityDecay(0.7);
+  } else {
+    force.velocityDecay(0.85);
+  }
   force.alphaDecay(0.01);
   // force.alphaMin(0);
   force.restart();
@@ -669,12 +676,12 @@ export const main = (
     // lasso.items().classed("not_possible", false).classed("possible", false);
 
     // ! 根据ip来选择那些节点被聚合
-    // const selectedNodesItem = lasso.selectedItems(); //选择的DOM
-    const selectedNodesItem = d3.selectAll('circle').filter(d => {
-      return case1.includes(d?.mgmt_ip);
-    })
-    const selectedNodesData = selectedNodesItem.data(); //选择的节点数据
-    // handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
+    const selectedNodesItem = lasso.selectedItems(); //选择的DOMfdf
+    // const selectedNodesItem = d3.selectAll('circle').filter(d => {
+    //   return case4.includes(d?.mgmt_ip);
+    // })
+    // const selectedNodesData = selectedNodesItem.data(); //选择的节点数据
+    handleNodesAggreation(res, selectedNodesItem, zoom, algo, force, lasso_start, lasso_draw, lasso_end)
   };
   lassoendRef = lasso_end
 
@@ -1050,12 +1057,12 @@ export const main = (
       console.log(evalMatrix.getAllMatrix?.());
     });
     if (algo === 'none') {
-      force.velocityDecay(0.99);
+      force.velocityDecay(0.93);
     } else {
       force.velocityDecay(0.80);
     }
     if (algo === 'none') {
-      force.alpha(0.3).restart();
+      force.alpha(0.5).restart();
     } else {
       force.alpha(0.6).restart();
     }
