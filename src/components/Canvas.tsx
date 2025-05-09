@@ -3,17 +3,26 @@ import styled from "styled-components";
 import { main } from "../core/index";
 import * as d3 from "d3";
 import { useAtom } from "jotai";
-import { dataNameAtom } from "../store";
+import { algoAtom, dataNameAtom } from "../store";
 import { DataMap } from "../config/data";
 import { cloneDeep } from "lodash";
 
 const Wrapper = styled.div`
   width: 100%;
   height: 100%;
-  background-color: #f6f6f6;
+  // background-color: #f6f6f6;
 `;
-function Canvas({ lassoFlag, velocityDecay ,alpha,collide,alphaMin,alphaDecay,linkStrength}: any) {
+function Canvas({
+  lassoFlag,
+  velocityDecay,
+  alpha,
+  collide,
+  alphaMin,
+  alphaDecay,
+  linkStrength,
+}: any) {
   const [dataName] = useAtom<string>(dataNameAtom);
+  const [algo] = useAtom<string>(algoAtom);
   const initRef = React.useRef(true);
 
   React.useLayoutEffect(() => {
@@ -26,14 +35,35 @@ function Canvas({ lassoFlag, velocityDecay ,alpha,collide,alphaMin,alphaDecay,li
       collide,
       alphaMin,
       alphaDecay,
-      linkStrength
+      linkStrength,
+      algo,
+      true,
     );
-    initRef.current = false;
-  }, [lassoFlag, velocityDecay, dataName,alpha,collide,alphaMin,alphaDecay,linkStrength]);
+    // initRef.current = false;
+  }, [
+    lassoFlag,
+    velocityDecay,
+    dataName,
+    alpha,
+    collide,
+    alphaMin,
+    alphaDecay,
+    linkStrength,
+    algo
+  ]);
 
   React.useEffect(() => {
     initRef.current = true;
-  }, [dataName]);
+  }, [
+    dataName,
+    velocityDecay,
+    dataName,
+    alpha,
+    collide,
+    alphaMin,
+    alphaDecay,
+    linkStrength,
+  ]);
   return (
     <Wrapper>
       <svg id={"viewport"}></svg>

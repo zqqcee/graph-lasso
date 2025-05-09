@@ -5,6 +5,7 @@ import { velocityDecayAtom, dataNameAtom ,alphaAtom,collideAtom,alphaMinAtom,alp
 import { useAtom } from "jotai";
 import DataSelect from "./DataSelect";
 import DataDescription from "./DataDescription";
+import AlgoSelect from "./AlgoSelect";
 
 const Wrapper = styled.div`
   padding: 12px 24px;
@@ -23,8 +24,13 @@ const Wrapper = styled.div`
     border-radius: 8px;
     box-shadow: 0px 0px 4px 1px #cfe7cf;
     padding: 12px 12px;
-}
   }
+  .data-select-wrapper{
+    display: flex; 
+    gap: 20px;
+    flex-direction: column;
+  }
+
 `;
 function Operation() {
   const [, setVelocityDecayAtom] = useAtom(velocityDecayAtom);
@@ -38,6 +44,7 @@ function Operation() {
     <Wrapper>
       <div className="data-select-wrapper">
         <DataSelect />
+        <AlgoSelect />
       </div>
       <div className="data-description">
         <DataDescription dataName={dataName} />
